@@ -1,0 +1,19 @@
+.select2-selection{
+    border: 1px solid #bfc9d4;
+    border-radius: 6px;
+    background: #fff;
+    transition: none;
+    height: 45px!important;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+   
+    line-height: 45px!important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 45px!important;
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    width: 20px;
+}
+
