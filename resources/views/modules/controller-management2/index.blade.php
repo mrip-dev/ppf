@@ -430,11 +430,17 @@
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">On Time</div>
-                                        <div class="cc-metric-value -on" id="heater-on-time">45.0</div>
+                                        <div class="cc-metric-value -on">
+                                            <span class="view-mode" id="heater-on-time">45.0</span>
+                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark time-input" name="heat_on_time" id="heater-on-time-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                        </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">Off Time</div>
-                                        <div class="cc-metric-value -off" id="heater-off-time">45.0</div>
+                                        <div class="cc-metric-value -off">
+                                            <span class="view-mode" id="heater-off-time">45.0</span>
+                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark time-input" name="heat_off_time" id="heater-off-time-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -490,11 +496,11 @@
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">On Time</div>
-                                        <div class="cc-metric-value -on" id="extra1-on-time">45.0</div>
+                                        <div class="cc-metric-value -on">45.0</div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">Off Time</div>
-                                        <div class="cc-metric-value -off" id="extra1-off-time">45.0</div>
+                                        <div class="cc-metric-value -off">45.0</div>
                                     </div>
                                 </div>
                             </div>
@@ -518,11 +524,11 @@
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">On Time</div>
-                                        <div class="cc-metric-value -on" id="extra2-on-time">45.0</div>
+                                        <div class="cc-metric-value -on">45.0</div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">Off Time</div>
-                                        <div class="cc-metric-value -off" id="extra2-off-time">45.0</div>
+                                        <div class="cc-metric-value -off">45.0</div>
                                     </div>
                                 </div>
                             </div>
@@ -630,27 +636,30 @@
             var data = window.currentData;
 
             @for($i=1;$i<=12;$i++)
-            $('#fan{{$i}}-on-temp-input').val(data.fan{{$i}}_on_temp ? (parseFloat(data.fan{{$i}}_on_temp) / 10).toFixed(1) : '');
-            $('#fan{{$i}}-off-temp-input').val(data.fan{{$i}}_off_temp ? (parseFloat(data.fan{{$i}}_off_temp) / 10).toFixed(1) : '');
+            $('#fan{{$i}}-on-temp-input').val(data.fan{{$i}}_on_temp ?? '');
+            $('#fan{{$i}}-off-temp-input').val(data.fan{{$i}}_off_temp ?? '');
             $('#fan{{$i}}-on-time-input').val(data.fan{{$i}}_on_time || '');
             $('#fan{{$i}}-off-time-input').val(data.fan{{$i}}_off_time || '');
             @endfor
 
             // cool1
-            $('#cool1-on-temp-input').val(data.pad1_on_temp ? (parseFloat(data.pad1_on_temp) / 10).toFixed(1) : '');
-            $('#cool1-off-temp-input').val(data.pad1_off_temp ? (parseFloat(data.pad1_off_temp) / 10).toFixed(1) : '');
+            $('#cool1-on-temp-input').val(data.pad1_on_temp ?? '');
+            $('#cool1-off-temp-input').val(data.pad1_off_temp ?? '');
             $('#cool1-on-time-input').val(data.pad1_on_time || '');
             $('#cool1-off-time-input').val(data.pad1_off_time || '');
 
             // cool2
-            $('#cool2-on-temp-input').val(data.pad2_on_temp ? (parseFloat(data.pad2_on_temp) / 10).toFixed(1) : '');
-            $('#cool2-off-temp-input').val(data.pad2_off_temp ? (parseFloat(data.pad2_off_temp) / 10).toFixed(1) : '');
+            $('#cool2-on-temp-input').val(data.pad2_on_temp ?? '');
+            $('#cool2-off-temp-input').val(data.pad2_off_temp ?? '');
             $('#cool2-on-time-input').val(data.pad2_on_time || '');
             $('#cool2-off-time-input').val(data.pad2_off_time || '');
 
             // heat
-            $('#heater-on-temp-input').val(data.heat_on_temp ? (parseFloat(data.heat_on_temp) / 10).toFixed(1) : '');
-            $('#heater-off-temp-input').val(data.heat_off_temp ? (parseFloat(data.heat_off_temp) / 10).toFixed(1) : '');
+            $('#heater-on-temp-input').val(data.heat_on_temp ?? '');
+            $('#heater-off-temp-input').val(data.heat_off_temp ?? '');
+            $('#heater-on-time-input').val(data.heat_on_time || '');
+            $('#heater-off-time-input').val(data.heat_off_time || '');
+
         }
 
         $('#btn-edit').on('click', function() {
@@ -672,16 +681,7 @@
         });
 
         $('#inline-edit-form').on('submit', function() {
-            // Scale temperature input values by 10 before submission
-            $('.temp-input').each(function() {
-                var val = $(this).val();
-                if (val !== '') {
-                    var num = parseFloat(val);
-                    if (!isNaN(num)) {
-                        $(this).val(Math.round(num * 10));
-                    }
-                }
-            });
+            // Temp inputs already hold raw controller values — no scaling needed
         });
     });
 </script>
