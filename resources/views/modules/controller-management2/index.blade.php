@@ -125,6 +125,24 @@
         color: #94a3b8;
     }
 
+    /* ---- section header row (title + save button) ---- */
+    .cc-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .cc-section-title {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--cc-blue-dark);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
     /* ---- device cards ---- */
     .cc-device-grid {
         display: grid;
@@ -187,29 +205,36 @@
     .cc-metric-value {
         flex: 1;
         text-align: center;
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 700;
-        font-size: 13px;
         border-radius: 7px;
-        padding: 4px 6px;
-        background: #fff;
-        border: 1.5px solid transparent;
+        padding: 0;
+        background: transparent;
     }
-    .cc-metric-value.-on  { border-color: var(--cc-green); color: #15803d; }
-    .cc-metric-value.-off { border-color: var(--cc-red); color: #b91c1c; }
+    .cc-metric-value.-on  .cc-inline-input { border-color: var(--cc-green); color: #15803d; }
+    .cc-metric-value.-off .cc-inline-input { border-color: var(--cc-red); color: #b91c1c; }
 
-    .cc-page .temp-input,
-    .cc-page .time-input {
+    .cc-page .cc-inline-input {
+        width: 100%;
+        height: 26px;
+        font-size: 12px;
+        padding: 2px 4px;
+        text-align: center;
         border-radius: 7px !important;
-        border: 1px solid rgba(255,255,255,0.6) !important;
+        border: 1.5px solid var(--cc-border) !important;
+        background: #fff !important;
         font-family: 'JetBrains Mono', monospace;
         font-weight: 600;
+        color: var(--cc-ink);
+    }
+    .cc-page .cc-inline-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.25);
     }
 
     /* ---- action bar ---- */
     .cc-actions {
         margin-top: 22px;
         display: flex;
+        align-items: center;
         gap: 10px;
         flex-wrap: wrap;
     }
@@ -223,9 +248,22 @@
         transition: filter .15s ease, transform .15s ease;
     }
     .cc-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .cc-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; filter: none; }
     .cc-btn.-primary  { background: var(--cc-blue); color: #fff; }
     .cc-btn.-success  { background: var(--cc-green); color: #fff; }
     .cc-btn.-secondary{ background: #e2e8f0; color: var(--cc-ink); }
+    .cc-actions-error {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--cc-red);
+    }
+    .cc-dirty-note {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--cc-amber);
+        display: none;
+    }
+    .cc-dirty-note.-visible { display: inline; }
 </style>
 
 <div class="layout-px-spacing">
@@ -254,7 +292,7 @@
 
                     <div class="cc-body">
 
-                        <!-- sensor readouts -->
+                        <!-- sensor readouts (read-only, live) -->
                         <div class="cc-sensor-grid">
                             <div class="cc-sensor-tile -temp">
                                 <div class="cc-sensor-value"><span id="room_temp">50</span></div>
@@ -278,10 +316,19 @@
                             </div>
                         </div>
 
+                        <!-- section head: fan controls + save -->
+                        <div class="cc-section-head">
+                            <p class="cc-section-title">12 Fan &amp; Device Controls</p>
+                            <div class="d-flex align-items-center" style="gap:10px;">
+                                <span id="dirty-note" class="cc-dirty-note">Unsaved changes</span>
+                                <button type="submit" id="btn-save" class="cc-btn -success" disabled>Save Setpoints</button>
+                            </div>
+                        </div>
+
                         <!-- device cards -->
                         <div class="cc-device-grid">
                             @for($i=1;$i<=12;$i++)
-                            <div class="cc-device-card">
+                            <div class="cc-device-card" data-device="fan{{$i}}">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Fan {{$i}}</p>
                                     <div class="cc-status-chips">
@@ -293,29 +340,25 @@
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">On Temp</div>
                                         <div class="cc-metric-value -on">
-                                            <span class="view-mode" id="fan{{$i}}-on-temp">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark temp-input" name="fan{{$i}}_on_temp" id="fan{{$i}}-on-temp-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input temp-input" name="fan{{$i}}_on_temp" id="fan{{$i}}-on-temp-input">
                                         </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">Off Temp</div>
                                         <div class="cc-metric-value -off">
-                                            <span class="view-mode" id="fan{{$i}}-off-temp">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark temp-input" name="fan{{$i}}_off_temp" id="fan{{$i}}-off-temp-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input temp-input" name="fan{{$i}}_off_temp" id="fan{{$i}}-off-temp-input">
                                         </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">On Time</div>
                                         <div class="cc-metric-value -on">
-                                            <span class="view-mode" id="fan{{$i}}-on-time">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark time-input" name="fan{{$i}}_on_time" id="fan{{$i}}-on-time-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input time-input" name="fan{{$i}}_on_time" id="fan{{$i}}-on-time-input">
                                         </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">Off Time</div>
                                         <div class="cc-metric-value -off">
-                                            <span class="view-mode" id="fan{{$i}}-off-time">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark time-input" name="fan{{$i}}_off_time" id="fan{{$i}}-off-time-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input time-input" name="fan{{$i}}_off_time" id="fan{{$i}}-off-time-input">
                                         </div>
                                     </div>
                                 </div>
@@ -323,7 +366,7 @@
                             @endfor
 
                             <!-- Cool 1 -->
-                            <div class="cc-device-card">
+                            <div class="cc-device-card" data-device="cool1">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Cool 1</p>
                                     <div class="cc-status-chips">
@@ -335,36 +378,32 @@
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">On Temp</div>
                                         <div class="cc-metric-value -on">
-                                            <span class="view-mode" id="cool1-on-temp">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark temp-input" name="pad1_on_temp" id="cool1-on-temp-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input temp-input" name="pad1_on_temp" id="cool1-on-temp-input">
                                         </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">Off Temp</div>
                                         <div class="cc-metric-value -off">
-                                            <span class="view-mode" id="cool1-off-temp">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark temp-input" name="pad1_off_temp" id="cool1-off-temp-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input temp-input" name="pad1_off_temp" id="cool1-off-temp-input">
                                         </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">On Time</div>
                                         <div class="cc-metric-value -on">
-                                            <span class="view-mode" id="cool1-on-time">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark time-input" name="pad1_on_time" id="cool1-on-time-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input time-input" name="pad1_on_time" id="cool1-on-time-input">
                                         </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">Off Time</div>
                                         <div class="cc-metric-value -off">
-                                            <span class="view-mode" id="cool1-off-time">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark time-input" name="pad1_off_time" id="cool1-off-time-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input time-input" name="pad1_off_time" id="cool1-off-time-input">
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Cool 2 -->
-                            <div class="cc-device-card">
+                            <div class="cc-device-card" data-device="cool2">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Cool 2</p>
                                     <div class="cc-status-chips">
@@ -376,36 +415,32 @@
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">On Temp</div>
                                         <div class="cc-metric-value -on">
-                                            <span class="view-mode" id="cool2-on-temp">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark temp-input" name="pad2_on_temp" id="cool2-on-temp-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input temp-input" name="pad2_on_temp" id="cool2-on-temp-input">
                                         </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">Off Temp</div>
                                         <div class="cc-metric-value -off">
-                                            <span class="view-mode" id="cool2-off-temp">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark temp-input" name="pad2_off_temp" id="cool2-off-temp-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input temp-input" name="pad2_off_temp" id="cool2-off-temp-input">
                                         </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">On Time</div>
                                         <div class="cc-metric-value -on">
-                                            <span class="view-mode" id="cool2-on-time">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark time-input" name="pad2_on_time" id="cool2-on-time-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input time-input" name="pad2_on_time" id="cool2-on-time-input">
                                         </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">Off Time</div>
                                         <div class="cc-metric-value -off">
-                                            <span class="view-mode" id="cool2-off-time">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark time-input" name="pad2_off_time" id="cool2-off-time-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input time-input" name="pad2_off_time" id="cool2-off-time-input">
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Heater -->
-                            <div class="cc-device-card">
+                            <div class="cc-device-card" data-device="heater">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Heater</p>
                                     <div class="cc-status-chips">
@@ -417,35 +452,31 @@
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">On Temp</div>
                                         <div class="cc-metric-value -on">
-                                            <span class="view-mode" id="heater-on-temp">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark temp-input" name="heat_on_temp" id="heater-on-temp-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input temp-input" name="heat_on_temp" id="heater-on-temp-input">
                                         </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">Off Temp</div>
                                         <div class="cc-metric-value -off">
-                                            <span class="view-mode" id="heater-off-temp">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark temp-input" name="heat_off_temp" id="heater-off-temp-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input temp-input" name="heat_off_temp" id="heater-off-temp-input">
                                         </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">On Time</div>
                                         <div class="cc-metric-value -on">
-                                            <span class="view-mode" id="heater-on-time">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark time-input" name="heat_on_time" id="heater-on-time-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input time-input" name="heat_on_time" id="heater-on-time-input">
                                         </div>
                                     </div>
                                     <div class="cc-metric-row">
                                         <div class="cc-metric-label">Off Time</div>
                                         <div class="cc-metric-value -off">
-                                            <span class="view-mode" id="heater-off-time">45.0</span>
-                                            <input type="text" class="form-control form-control-sm edit-mode d-none text-center bg-white text-dark time-input" name="heat_off_time" id="heater-off-time-input" style="height: 24px; font-size: 11px; padding: 2px;">
+                                            <input type="text" class="cc-inline-input time-input" name="heat_off_time" id="heater-off-time-input">
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Light -->
+                            <!-- Light (no persisted setpoints yet — read-only) -->
                             <div class="cc-device-card">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Light</p>
@@ -475,7 +506,7 @@
                             </div>
                         </div>
 
-                        <!-- wide extras -->
+                        <!-- wide extras (read-only, no backing fields yet) -->
                         <div class="cc-device-grid -wide mt-3">
                             <div class="cc-device-card">
                                 <div class="cc-device-head">
@@ -534,12 +565,9 @@
                             </div>
                         </div>
 
-                        <!-- actions -->
+                        <!-- form-level messages -->
                         <div class="cc-actions">
-                            <button type="button" id="btn-edit" class="cc-btn -primary">Edit</button>
-                            <button type="submit" id="btn-save" class="cc-btn -success d-none">Save</button>
-                            <button type="button" id="btn-cancel" class="cc-btn -secondary d-none">Cancel</button>
-                            <a href="" id="myEdit" class="cc-btn -primary d-none">Edit</a>
+                            <span id="form-error-msg" class="cc-actions-error d-none"></span>
                         </div>
                     </div>
                 </form>
@@ -553,8 +581,20 @@
 
 <script>
     $(document).ready(function() {
-        var isEditing = false;
         window.currentData = null;
+        var isDirty = false; // true once the user edits a field, until Save is submitted
+
+        // ---- min/max bounds config (raw controller values, i.e. before /10 scaling) ----
+        // Adjust these to match your real hardware limits.
+        var TEMP_MIN = 0;      // °C
+        var TEMP_MAX = 50;     // °C — values are stored/entered as real decimals (e.g. 25.0), not scaled ints
+        var TIME_MIN = 0;      // seconds
+        var TIME_MAX = 9999;   // seconds
+
+        // Device groups this form can edit, mapped to their input id prefixes.
+        var EDITABLE_DEVICES = [];
+        for (var i = 1; i <= 12; i++) EDITABLE_DEVICES.push('fan' + i);
+        EDITABLE_DEVICES.push('cool1', 'cool2', 'heater');
 
         function formatTemp(val) {
             if (val === null || val === undefined || val === '') return '';
@@ -563,27 +603,41 @@
             return (num / 10).toFixed(1);
         }
 
-        function formatTime(val) {
-            if (val === null || val === undefined || val === '') return '';
-            return val + ' sec';
-        }
-
         // Fetch data initially
         fetchData();
-        // Set interval to fetch data every 10 seconds
+        // Poll every 10 seconds; skip repopulating inputs while the user has
+        // unsaved edits so we never overwrite what they're typing.
         setInterval(function() {
-            if (!isEditing) {
-                fetchData();
-            }
-        }, 10000);  
+            fetchData();
+        }, 10000);
 
         function fetchData() {
             $.ajax({
                 url: "{{ route('fetch.data2') }}",
                 type: "GET",
                 success: function(response) {
-                    window.currentData = response.data;
-                    updateUI();
+                    // Only accept this poll's result if it actually has a
+                    // device row. A transient null here must NOT overwrite
+                    // currentData we already had — that would wipe out the
+                    // form's action/device_id and re-disable Save mid-edit,
+                    // even while the user has unsaved changes on screen.
+                    if (response.data) {
+                        window.currentData = response.data;
+                        updateFormAction();
+                        $('#btn-save').prop('disabled', false);
+                    } else if (!window.currentData) {
+                        // We've genuinely never had a valid row — keep Save
+                        // disabled and let the console explain why.
+                        console.warn('No status data returned for this device.');
+                        $('#btn-save').prop('disabled', true);
+                    }
+                    // else: this poll was empty but we already have a good
+                    // currentData from before — ignore it and keep going.
+
+                    updateSensors();
+                    if (!isDirty) {
+                        populateInputs();
+                    }
                 },
                 error: function(xhr) {
                     console.log(xhr.responseText);
@@ -591,43 +645,18 @@
             });
         }
 
-        function updateUI() {
+        function updateSensors() {
             if (!window.currentData) return;
             var data = window.currentData;
-
             $('#room_temp').text(formatTemp(data.temperature));
             $('#brooder_temp').text(formatTemp(data.temp2_brooder));
             $('#outside_temp').text(formatTemp(data.temp3_outside));
             $('#humidity').text(data.humidity);
+        }
 
-            @for($i=1;$i<=12;$i++)
-            $('#fan{{$i}}-on-temp').text(formatTemp(data.fan{{$i}}_on_temp));
-            $('#fan{{$i}}-off-temp').text(formatTemp(data.fan{{$i}}_off_temp));
-            $('#fan{{$i}}-on-time').text(formatTime(data.fan{{$i}}_on_time));
-            $('#fan{{$i}}-off-time').text(formatTime(data.fan{{$i}}_off_time));
-            @endfor
-
-            // cool1
-            $('#cool1-on-temp').text(formatTemp(data.pad1_on_temp));
-            $('#cool1-off-temp').text(formatTemp(data.pad1_off_temp));
-            $('#cool1-on-time').text(formatTime(data.pad1_on_time));
-            $('#cool1-off-time').text(formatTime(data.pad1_off_time));
-
-            // cool2
-            $('#cool2-on-temp').text(formatTemp(data.pad2_on_temp));
-            $('#cool2-off-temp').text(formatTemp(data.pad2_off_temp));
-            $('#cool2-on-time').text(formatTime(data.pad2_on_time));
-            $('#cool2-off-time').text(formatTime(data.pad2_off_time));
-
-            // heat
-            $('#heater-on-temp').text(formatTemp(data.heat_on_temp));
-            $('#heater-off-temp').text(formatTemp(data.heat_off_temp));
-            $('#heater-on-time').text(formatTime(data.heat_on_time));
-            $('#heater-off-time').text(formatTime(data.heat_off_time));
-
-            var id = data.device_id;
-            var newURL = `/cm-shed2/${id}/edit`;
-            $("#myEdit").prop('href', newURL);
+        function updateFormAction() {
+            if (!window.currentData || !window.currentData.device_id) return;
+            var id = window.currentData.device_id;
             $('#inline-edit-form').attr('action', `/cm-shed2/${id}`);
         }
 
@@ -638,50 +667,134 @@
             @for($i=1;$i<=12;$i++)
             $('#fan{{$i}}-on-temp-input').val(data.fan{{$i}}_on_temp ?? '');
             $('#fan{{$i}}-off-temp-input').val(data.fan{{$i}}_off_temp ?? '');
-            $('#fan{{$i}}-on-time-input').val(data.fan{{$i}}_on_time || '');
-            $('#fan{{$i}}-off-time-input').val(data.fan{{$i}}_off_time || '');
+            $('#fan{{$i}}-on-time-input').val(data.fan{{$i}}_on_time ?? '');
+            $('#fan{{$i}}-off-time-input').val(data.fan{{$i}}_off_time ?? '');
             @endfor
 
             // cool1
             $('#cool1-on-temp-input').val(data.pad1_on_temp ?? '');
             $('#cool1-off-temp-input').val(data.pad1_off_temp ?? '');
-            $('#cool1-on-time-input').val(data.pad1_on_time || '');
-            $('#cool1-off-time-input').val(data.pad1_off_time || '');
+            $('#cool1-on-time-input').val(data.pad1_on_time ?? '');
+            $('#cool1-off-time-input').val(data.pad1_off_time ?? '');
 
             // cool2
             $('#cool2-on-temp-input').val(data.pad2_on_temp ?? '');
             $('#cool2-off-temp-input').val(data.pad2_off_temp ?? '');
-            $('#cool2-on-time-input').val(data.pad2_on_time || '');
-            $('#cool2-off-time-input').val(data.pad2_off_time || '');
+            $('#cool2-on-time-input').val(data.pad2_on_time ?? '');
+            $('#cool2-off-time-input').val(data.pad2_off_time ?? '');
 
             // heat
             $('#heater-on-temp-input').val(data.heat_on_temp ?? '');
             $('#heater-off-temp-input').val(data.heat_off_temp ?? '');
-            $('#heater-on-time-input').val(data.heat_on_time || '');
-            $('#heater-off-time-input').val(data.heat_off_time || '');
-
+            $('#heater-on-time-input').val(data.heat_on_time ?? '');
+            $('#heater-off-time-input').val(data.heat_off_time ?? '');
         }
 
-        $('#btn-edit').on('click', function() {
-            isEditing = true;
-            populateInputs();
-            $('.view-mode').addClass('d-none');
-            $('.edit-mode').removeClass('d-none');
-            $('#btn-edit').addClass('d-none');
-            $('#btn-save, #btn-cancel').removeClass('d-none');
+        /**
+         * Strips anything that isn't a digit (or a single decimal point for
+         * temps) as the user types, then clamps the numeric value down to
+         * `max` the instant it would exceed it. Values below `min` are only
+         * corrected on blur, so partial typing (e.g. an empty field, or "0."
+         * while entering "0.5") isn't fought mid-keystroke.
+         */
+        function clampTempInput($el, max) {
+            var raw = $el.val();
+            var cleaned = raw.replace(/[^0-9.]/g, '');
+            var dot = cleaned.indexOf('.');
+            if (dot !== -1) {
+                cleaned = cleaned.slice(0, dot + 1) + cleaned.slice(dot + 1).replace(/\./g, '');
+            }
+            if (cleaned !== raw) $el.val(cleaned);
+
+            var num = parseFloat(cleaned);
+            if (!isNaN(num) && num > max) {
+                cleaned = (Math.round(max * 10) / 10).toString();
+                $el.val(cleaned);
+                num = max;
+            }
+            return isNaN(num) ? null : num;
+        }
+
+        function clampTimeInput($el, max) {
+            var raw = $el.val();
+            var cleaned = raw.replace(/[^0-9]/g, '');
+            if (cleaned !== raw) $el.val(cleaned);
+
+            var num = parseInt(cleaned, 10);
+            if (!isNaN(num) && num > max) {
+                $el.val(String(max));
+                num = max;
+            }
+            return isNaN(num) ? null : num;
+        }
+
+        function clampMinOnBlur($el, min, isTemp) {
+            var raw = $el.val();
+            if (raw === '') return;
+            var num = isTemp ? parseFloat(raw) : parseInt(raw, 10);
+            if (!isNaN(num) && num < min) {
+                $el.val(isTemp ? min.toFixed(1) : String(min));
+            }
+        }
+
+        /**
+         * Enforces this device's bounds live: each temp is capped at
+         * TEMP_MAX, each time at TIME_MAX, and — since Off Temp must always
+         * be less than On Temp — Off Temp's effective ceiling is whatever
+         * On Temp currently holds. The user simply cannot type a value past
+         * these limits; there's nothing left to flag as an error.
+         */
+        function enforceDeviceBounds(device) {
+            var $onTemp  = $('#' + device + '-on-temp-input');
+            var $offTemp = $('#' + device + '-off-temp-input');
+            var $onTime  = $('#' + device + '-on-time-input');
+            var $offTime = $('#' + device + '-off-time-input');
+
+            var onTempVal = clampTempInput($onTemp, TEMP_MAX);
+            var offCeiling = (onTempVal !== null) ? Math.max(TEMP_MIN, onTempVal - 0.1) : TEMP_MAX;
+            clampTempInput($offTemp, offCeiling);
+
+            clampTimeInput($onTime, TIME_MAX);
+            clampTimeInput($offTime, TIME_MAX);
+        }
+
+        // Fields are always editable — no Edit/Cancel toggle. Typing marks the
+        // form dirty (so polling won't clobber it) and clamps in real time.
+        $(document).on('input', '.temp-input, .time-input', function() {
+            isDirty = true;
+            $('#dirty-note').addClass('-visible');
+            var $card = $(this).closest('.cc-device-card');
+            var device = $card.data('device');
+            if (device) enforceDeviceBounds(device);
         });
 
-        $('#btn-cancel').on('click', function() {
-            isEditing = false;
-            $('.view-mode').removeClass('d-none');
-            $('.edit-mode').addClass('d-none');
-            $('#btn-edit').removeClass('d-none');
-            $('#btn-save, #btn-cancel').addClass('d-none');
-            updateUI();
+        // On blur, pull anything left below the minimum back up to it
+        // (covers a field emptied then left blank, or a stray "0").
+        $(document).on('blur', '.temp-input', function() {
+            clampMinOnBlur($(this), TEMP_MIN, true);
+        });
+        $(document).on('blur', '.time-input', function() {
+            clampMinOnBlur($(this), TIME_MIN, false);
         });
 
-        $('#inline-edit-form').on('submit', function() {
-            // Temp inputs already hold raw controller values — no scaling needed
+        $('#inline-edit-form').on('submit', function(e) {
+            var action = $(this).attr('action');
+            if (!action || !window.currentData || !window.currentData.device_id) {
+                e.preventDefault();
+                $('#form-error-msg').removeClass('d-none').text('Cannot save — device data not loaded yet.');
+                return false;
+            }
+
+            // Final safety pass — inputs are already clamped as-you-type, but
+            // this re-enforces bounds in case fields were filled out of order
+            // (e.g. Off Temp typed before On Temp existed).
+            EDITABLE_DEVICES.forEach(function (device) {
+                enforceDeviceBounds(device);
+            });
+
+            $('#form-error-msg').addClass('d-none').text('');
+            isDirty = false; // page will reload/redirect on success, resetting state anyway
+            // Temp inputs already hold raw controller values — no scaling needed.
         });
     });
 </script>
