@@ -328,7 +328,7 @@
                         <!-- device cards -->
                         <div class="cc-device-grid">
                             @for($i=1;$i<=12;$i++)
-                            <div class="cc-device-card" data-device="fan{{$i}}">
+                            <div class="cc-device-card" data-device="fan{{$i}}" data-mode="cool">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Fan {{$i}}</p>
                                     <div class="cc-status-chips">
@@ -366,7 +366,7 @@
                             @endfor
 
                             <!-- Cool 1 -->
-                            <div class="cc-device-card" data-device="cool1">
+                            <div class="cc-device-card" data-device="cool1" data-mode="cool">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Cool 1</p>
                                     <div class="cc-status-chips">
@@ -403,7 +403,7 @@
                             </div>
 
                             <!-- Cool 2 -->
-                            <div class="cc-device-card" data-device="cool2">
+                            <div class="cc-device-card" data-device="cool2" data-mode="cool">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Cool 2</p>
                                     <div class="cc-status-chips">
@@ -440,7 +440,7 @@
                             </div>
 
                             <!-- Heater -->
-                            <div class="cc-device-card" data-device="heater">
+                            <div class="cc-device-card" data-device="heater" data-mode="heat">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Heater</p>
                                     <div class="cc-status-chips">
@@ -584,23 +584,38 @@
         window.currentData = null;
         var isDirty = false; // true once the user edits a field, until Save is submitted
 
-        // ---- min/max bounds config (raw controller values, i.e. before /10 scaling) ----
-        // Adjust these to match your real hardware limits.
+        // ---- min/max bounds config (real-world decimal values, e.g. 25.5°C) ----
+        // Setpoints are entered/displayed as real decimals but stored in the DB
+        // as raw integers with the decimal stripped (25.5 -> 255), same scaling
+        // already used for the live sensor readouts.
         var TEMP_MIN = 0;      // °C
-        var TEMP_MAX = 50;     // °C — values are stored/entered as real decimals (e.g. 25.0), not scaled ints
+        var TEMP_MAX = 50;     // °C
         var TIME_MIN = 0;      // seconds
         var TIME_MAX = 9999;   // seconds
+        var STEP = 0.1;        // smallest temp increment
 
-        // Device groups this form can edit, mapped to their input id prefixes.
+        // Device groups this form can edit, mapped to their input id prefixes,
+        // and whether they use "cool" logic (On Temp > Off Temp: fans, pads)
+        // or "heat" logic (Off Temp > On Temp: brooder heater).
         var EDITABLE_DEVICES = [];
-        for (var i = 1; i <= 12; i++) EDITABLE_DEVICES.push('fan' + i);
-        EDITABLE_DEVICES.push('cool1', 'cool2', 'heater');
+        for (var i = 1; i <= 12; i++) EDITABLE_DEVICES.push({ id: 'fan' + i, mode: 'cool' });
+        EDITABLE_DEVICES.push({ id: 'cool1', mode: 'cool' });
+        EDITABLE_DEVICES.push({ id: 'cool2', mode: 'cool' });
+        EDITABLE_DEVICES.push({ id: 'heater', mode: 'heat' });
 
+        // Raw DB integer -> display decimal (300 -> 30.0)
         function formatTemp(val) {
             if (val === null || val === undefined || val === '') return '';
             var num = parseFloat(val);
-            if (isNaN(num)) return val;
+            if (isNaN(num)) return '';
             return (num / 10).toFixed(1);
+        }
+
+        // Display decimal -> raw DB integer (30.5 -> 305)
+        function toRawTemp(val) {
+            var num = parseFloat(val);
+            if (isNaN(num)) return '';
+            return Math.round(num * 10).toString();
         }
 
         // Fetch data initially
@@ -665,37 +680,37 @@
             var data = window.currentData;
 
             @for($i=1;$i<=12;$i++)
-            $('#fan{{$i}}-on-temp-input').val(data.fan{{$i}}_on_temp ?? '');
-            $('#fan{{$i}}-off-temp-input').val(data.fan{{$i}}_off_temp ?? '');
+            $('#fan{{$i}}-on-temp-input').val(formatTemp(data.fan{{$i}}_on_temp));
+            $('#fan{{$i}}-off-temp-input').val(formatTemp(data.fan{{$i}}_off_temp));
             $('#fan{{$i}}-on-time-input').val(data.fan{{$i}}_on_time ?? '');
             $('#fan{{$i}}-off-time-input').val(data.fan{{$i}}_off_time ?? '');
             @endfor
 
             // cool1
-            $('#cool1-on-temp-input').val(data.pad1_on_temp ?? '');
-            $('#cool1-off-temp-input').val(data.pad1_off_temp ?? '');
+            $('#cool1-on-temp-input').val(formatTemp(data.pad1_on_temp));
+            $('#cool1-off-temp-input').val(formatTemp(data.pad1_off_temp));
             $('#cool1-on-time-input').val(data.pad1_on_time ?? '');
             $('#cool1-off-time-input').val(data.pad1_off_time ?? '');
 
             // cool2
-            $('#cool2-on-temp-input').val(data.pad2_on_temp ?? '');
-            $('#cool2-off-temp-input').val(data.pad2_off_temp ?? '');
+            $('#cool2-on-temp-input').val(formatTemp(data.pad2_on_temp));
+            $('#cool2-off-temp-input').val(formatTemp(data.pad2_off_temp));
             $('#cool2-on-time-input').val(data.pad2_on_time ?? '');
             $('#cool2-off-time-input').val(data.pad2_off_time ?? '');
 
-            // heat
-            $('#heater-on-temp-input').val(data.heat_on_temp ?? '');
-            $('#heater-off-temp-input').val(data.heat_off_temp ?? '');
+            // heat (brooder) — Off Temp > On Temp
+            $('#heater-on-temp-input').val(formatTemp(data.heat_on_temp));
+            $('#heater-off-temp-input').val(formatTemp(data.heat_off_temp));
             $('#heater-on-time-input').val(data.heat_on_time ?? '');
             $('#heater-off-time-input').val(data.heat_off_time ?? '');
         }
 
         /**
-         * Strips anything that isn't a digit (or a single decimal point for
-         * temps) as the user types, then clamps the numeric value down to
-         * `max` the instant it would exceed it. Values below `min` are only
-         * corrected on blur, so partial typing (e.g. an empty field, or "0."
-         * while entering "0.5") isn't fought mid-keystroke.
+         * Strips anything that isn't a digit (or a single decimal point) as
+         * the user types, then clamps the numeric value to [min, max]. Values
+         * below min are only corrected on blur (see clampMinOnBlur), so
+         * partial typing (an empty field, or "0." while entering "0.5")
+         * isn't fought mid-keystroke.
          */
         function clampTempInput($el, max) {
             var raw = $el.val();
@@ -708,7 +723,7 @@
 
             var num = parseFloat(cleaned);
             if (!isNaN(num) && num > max) {
-                cleaned = (Math.round(max * 10) / 10).toString();
+                cleaned = (Math.round(max * 10) / 10).toFixed(1);
                 $el.val(cleaned);
                 num = max;
             }
@@ -738,21 +753,34 @@
         }
 
         /**
-         * Enforces this device's bounds live: each temp is capped at
-         * TEMP_MAX, each time at TIME_MAX, and — since Off Temp must always
-         * be less than On Temp — Off Temp's effective ceiling is whatever
-         * On Temp currently holds. The user simply cannot type a value past
-         * these limits; there's nothing left to flag as an error.
+         * Enforces this device's bounds live, both temps clamped to
+         * [TEMP_MIN, TEMP_MAX], and the On/Off relationship enforced
+         * according to device mode:
+         *   - "cool" (fans, cool pads): On Temp must stay > Off Temp,
+         *     so Off Temp's ceiling is On Temp - STEP.
+         *   - "heat" (brooder heater): Off Temp must stay > On Temp,
+         *     so On Temp's ceiling is Off Temp - STEP.
+         * The user simply cannot type a value that breaks the relationship;
+         * there's nothing left to flag as a submit-time error.
          */
-        function enforceDeviceBounds(device) {
+        function enforceDeviceBounds(device, mode) {
             var $onTemp  = $('#' + device + '-on-temp-input');
             var $offTemp = $('#' + device + '-off-temp-input');
             var $onTime  = $('#' + device + '-on-time-input');
             var $offTime = $('#' + device + '-off-time-input');
 
-            var onTempVal = clampTempInput($onTemp, TEMP_MAX);
-            var offCeiling = (onTempVal !== null) ? Math.max(TEMP_MIN, onTempVal - 0.1) : TEMP_MAX;
-            clampTempInput($offTemp, offCeiling);
+            if (mode === 'heat') {
+                // Off Temp drives the ceiling; On Temp must stay below it.
+                var offTempVal = clampTempInput($offTemp, TEMP_MAX);
+                var onCeiling = (offTempVal !== null) ? Math.max(TEMP_MIN, offTempVal - STEP) : TEMP_MAX;
+                clampTempInput($onTemp, onCeiling);
+            } else {
+                // Cool logic (fans / pads): On Temp drives the ceiling;
+                // Off Temp must stay below it.
+                var onTempVal = clampTempInput($onTemp, TEMP_MAX);
+                var offCeiling = (onTempVal !== null) ? Math.max(TEMP_MIN, onTempVal - STEP) : TEMP_MAX;
+                clampTempInput($offTemp, offCeiling);
+            }
 
             clampTimeInput($onTime, TIME_MAX);
             clampTimeInput($offTime, TIME_MAX);
@@ -765,13 +793,62 @@
             $('#dirty-note').addClass('-visible');
             var $card = $(this).closest('.cc-device-card');
             var device = $card.data('device');
-            if (device) enforceDeviceBounds(device);
+            var mode = $card.data('mode') || 'cool';
+            if (device) enforceDeviceBounds(device, mode);
+        });
+
+        /**
+         * Arrow-key increment/decrement. These inputs are type="text" (needed
+         * for the custom masking/clamping above), so there's no native number
+         * spinner — the browser does nothing with Up/Down out of the box.
+         * This wires that up manually:
+         *   - Up/Down: ±STEP for temps, ±1 for times
+         *   - Shift+Up/Down: ±1.0 for temps, ±10 for times (bigger jump)
+         * Result is clamped the same way typed input is, including the
+         * On/Off relationship for the device's mode.
+         */
+        $(document).on('keydown', '.temp-input, .time-input', function(e) {
+            if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+            e.preventDefault();
+
+            var $el = $(this);
+            var isTemp = $el.hasClass('temp-input');
+            var dir = (e.key === 'ArrowUp') ? 1 : -1;
+            var step = isTemp ? (e.shiftKey ? 1.0 : STEP) : (e.shiftKey ? 10 : 1);
+
+            var current = parseFloat($el.val());
+            if (isNaN(current)) current = isTemp ? TEMP_MIN : TIME_MIN;
+
+            var next = isTemp
+                ? Math.round((current + dir * step) * 10) / 10
+                : Math.round(current + dir * step);
+
+            // Respect the absolute floor here; the ceiling (including the
+            // On/Off relationship) is enforced right after via
+            // enforceDeviceBounds, same as if the user had typed the value.
+            var floor = isTemp ? TEMP_MIN : TIME_MIN;
+            if (next < floor) next = floor;
+
+            $el.val(isTemp ? next.toFixed(1) : String(next));
+
+            isDirty = true;
+            $('#dirty-note').addClass('-visible');
+            var $card = $el.closest('.cc-device-card');
+            var device = $card.data('device');
+            var mode = $card.data('mode') || 'cool';
+            if (device) enforceDeviceBounds(device, mode);
         });
 
         // On blur, pull anything left below the minimum back up to it
-        // (covers a field emptied then left blank, or a stray "0").
+        // (covers a field emptied then left blank, or a stray "0"), and
+        // normalize to one decimal place for display.
         $(document).on('blur', '.temp-input', function() {
             clampMinOnBlur($(this), TEMP_MIN, true);
+            var raw = $(this).val();
+            if (raw !== '') {
+                var num = parseFloat(raw);
+                if (!isNaN(num)) $(this).val(num.toFixed(1));
+            }
         });
         $(document).on('blur', '.time-input', function() {
             clampMinOnBlur($(this), TIME_MIN, false);
@@ -789,12 +866,22 @@
             // this re-enforces bounds in case fields were filled out of order
             // (e.g. Off Temp typed before On Temp existed).
             EDITABLE_DEVICES.forEach(function (device) {
-                enforceDeviceBounds(device);
+                enforceDeviceBounds(device.id, device.mode);
             });
 
             $('#form-error-msg').addClass('d-none').text('');
+
+            // Temp inputs are shown/edited as real decimals (e.g. 25.5) but
+            // the DB stores raw integers with the decimal stripped (255) —
+            // same convention as the sensor fields. Convert right before the
+            // browser serializes the form, so the UI never has to juggle two
+            // representations of the same field at once.
+            $('.temp-input').each(function() {
+                var raw = $(this).val();
+                if (raw !== '') $(this).val(toRawTemp(raw));
+            });
+
             isDirty = false; // page will reload/redirect on success, resetting state anyway
-            // Temp inputs already hold raw controller values — no scaling needed.
         });
     });
 </script>

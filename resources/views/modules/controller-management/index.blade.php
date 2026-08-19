@@ -130,105 +130,128 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 14px;
+        margin-bottom: 20px;
+        padding-bottom: 14px;
+        border-bottom: 2px solid var(--cc-border);
         flex-wrap: wrap;
         gap: 10px;
     }
     .cc-section-title {
         margin: 0;
-        font-size: 15px;
-        font-weight: 700;
-        color: var(--cc-blue-dark);
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--cc-green);
+        letter-spacing: 0.01em;
     }
 
     /* ---- device cards ---- */
     .cc-device-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-        gap: 14px;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 16px;
     }
     .cc-device-grid.-wide { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 
     .cc-device-card {
         background: var(--cc-panel);
         border: 1px solid var(--cc-border);
-        border-radius: 12px;
-        overflow: hidden;
+        border-radius: 16px;
+        padding: 16px 18px 18px;
         transition: box-shadow .15s ease, transform .15s ease;
     }
     .cc-device-card:hover {
         box-shadow: 0 6px 18px -8px rgba(15, 23, 42, 0.18);
         transform: translateY(-1px);
     }
+
+    /* color-coded by device type */
+    .cc-device-card[data-type="fan"]  { background: #f0fdf4; border-color: #bbf7d0; }
+    .cc-device-card[data-type="cool"] { background: #f0f9ff; border-color: #bae6fd; }
+    .cc-device-card[data-type="heat"] { background: #fef2f2; border-color: #fecaca; }
+    .cc-device-card[data-type="static"] { background: #f8fafc; border-color: var(--cc-border); }
+
+    .cc-device-card[data-type="fan"]  .cc-device-name { color: #15803d; }
+    .cc-device-card[data-type="cool"] .cc-device-name { color: #0284c7; }
+    .cc-device-card[data-type="heat"] .cc-device-name { color: #b91c1c; }
+    .cc-device-card[data-type="static"] .cc-device-name { color: var(--cc-muted); }
+
     .cc-device-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px 12px;
-        background: #f8fafc;
-        border-bottom: 1px solid var(--cc-border);
+        margin-bottom: 14px;
     }
     .cc-device-name {
         margin: 0;
-        font-size: 13.5px;
-        font-weight: 700;
-        color: var(--cc-ink);
+        font-size: 18px;
+        font-weight: 800;
     }
-    .cc-status-chips { display: flex; gap: 4px; }
-    .cc-chip {
-        font-size: 9.5px;
-        font-weight: 700;
+    .cc-status-pill {
+        font-size: 10.5px;
+        font-weight: 800;
         letter-spacing: 0.04em;
-        text-transform: uppercase;
-        padding: 3px 7px;
+        padding: 4px 12px;
         border-radius: 999px;
+        background: #dcfce7;
+        color: #15803d;
+        border: 1.5px solid #86efac;
     }
-    .cc-chip.-on  { background: #dcfce7; color: #15803d; }
-    .cc-chip.-off { background: #fee2e2; color: #b91c1c; }
+    .cc-status-pill.-off { background: #f1f5f9; color: #64748b; border-color: #cbd5e1; }
 
-    .cc-device-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 7px; }
-    .cc-metric-row {
+    .cc-device-body { display: flex; flex-direction: column; gap: 12px; }
+    .cc-field-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .cc-field-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--cc-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+    }
+    .cc-field-box {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
+        background: #fff;
+        border: 1.5px solid var(--cc-border);
+        border-radius: 10px;
+        padding: 8px 10px;
     }
-    .cc-metric-label {
+    .cc-field-box:focus-within {
+        border-color: var(--cc-blue);
+        box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+    }
+    .cc-field-unit {
         font-size: 11.5px;
-        color: var(--cc-muted);
-        font-weight: 500;
+        font-weight: 700;
+        color: #94a3b8;
         flex-shrink: 0;
-        width: 62px;
+        margin-left: 6px;
     }
-    .cc-metric-value {
-        flex: 1;
-        text-align: center;
-        border-radius: 7px;
-        padding: 0;
-        background: transparent;
+    .cc-field-static {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 800;
+        font-size: 17px;
+        color: var(--cc-ink);
     }
-    .cc-metric-value.-on  .cc-inline-input { border-color: var(--cc-green); color: #15803d; }
-    .cc-metric-value.-off .cc-inline-input { border-color: var(--cc-red); color: #b91c1c; }
 
     .cc-page .cc-inline-input {
         width: 100%;
-        height: 26px;
-        font-size: 12px;
-        padding: 2px 4px;
-        text-align: center;
-        border-radius: 7px !important;
-        border: 1.5px solid var(--cc-border) !important;
-        background: #fff !important;
+        border: none !important;
+        background: transparent !important;
+        padding: 0;
         font-family: 'JetBrains Mono', monospace;
-        font-weight: 600;
+        font-weight: 800;
+        font-size: 17px;
         color: var(--cc-ink);
+        text-align: left;
     }
-    .cc-page .cc-inline-input:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.25);
-    }
+    .cc-page .cc-inline-input:focus { outline: none; }
 
     /* ---- action bar ---- */
     .cc-actions {
@@ -328,37 +351,42 @@
                         <!-- device cards -->
                         <div class="cc-device-grid">
                             @for($i=1;$i<=12;$i++)
-                            <div class="cc-device-card" data-device="fan{{$i}}">
+                            <div class="cc-device-card" data-device="fan{{$i}}" data-mode="cool" data-type="fan">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Fan {{$i}}</p>
-                                    <div class="cc-status-chips">
-                                        <span class="badge badge-success cc-chip -on">On</span>
-                                        <span class="badge badge-danger cc-chip -off">Off</span>
-                                    </div>
+                                    <span class="cc-status-pill">ON</span>
                                 </div>
                                 <div class="cc-device-body">
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Temp</div>
-                                        <div class="cc-metric-value -on">
-                                            <input type="text" class="cc-inline-input temp-input" name="fan{{$i}}_on_temp" id="fan{{$i}}-on-temp-input">
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Temp</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input temp-input" name="fan{{$i}}_on_temp" id="fan{{$i}}-on-temp-input">
+                                                <span class="cc-field-unit">&deg;C</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="cc-field-label">Off Temp</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input temp-input" name="fan{{$i}}_off_temp" id="fan{{$i}}-off-temp-input">
+                                                <span class="cc-field-unit">&deg;C</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Temp</div>
-                                        <div class="cc-metric-value -off">
-                                            <input type="text" class="cc-inline-input temp-input" name="fan{{$i}}_off_temp" id="fan{{$i}}-off-temp-input">
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Time</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input time-input" name="fan{{$i}}_on_time" id="fan{{$i}}-on-time-input">
+                                                <span class="cc-field-unit">Sec</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Time</div>
-                                        <div class="cc-metric-value -on">
-                                            <input type="text" class="cc-inline-input time-input" name="fan{{$i}}_on_time" id="fan{{$i}}-on-time-input">
-                                        </div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Time</div>
-                                        <div class="cc-metric-value -off">
-                                            <input type="text" class="cc-inline-input time-input" name="fan{{$i}}_off_time" id="fan{{$i}}-off-time-input">
+                                        <div>
+                                            <span class="cc-field-label">Off Time</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input time-input" name="fan{{$i}}_off_time" id="fan{{$i}}-off-time-input">
+                                                <span class="cc-field-unit">Sec</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -366,141 +394,157 @@
                             @endfor
 
                             <!-- Cool 1 -->
-                            <div class="cc-device-card" data-device="cool1">
+                            <div class="cc-device-card" data-device="cool1" data-mode="cool" data-type="cool">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Cool 1</p>
-                                    <div class="cc-status-chips">
-                                        <span class="badge badge-success cc-chip -on">On</span>
-                                        <span class="badge badge-danger cc-chip -off">Off</span>
-                                    </div>
+                                    <span class="cc-status-pill">ON</span>
                                 </div>
                                 <div class="cc-device-body">
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Temp</div>
-                                        <div class="cc-metric-value -on">
-                                            <input type="text" class="cc-inline-input temp-input" name="pad1_on_temp" id="cool1-on-temp-input">
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Temp</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input temp-input" name="pad1_on_temp" id="cool1-on-temp-input">
+                                                <span class="cc-field-unit">&deg;C</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="cc-field-label">Off Temp</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input temp-input" name="pad1_off_temp" id="cool1-off-temp-input">
+                                                <span class="cc-field-unit">&deg;C</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Temp</div>
-                                        <div class="cc-metric-value -off">
-                                            <input type="text" class="cc-inline-input temp-input" name="pad1_off_temp" id="cool1-off-temp-input">
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Time</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input time-input" name="pad1_on_time" id="cool1-on-time-input">
+                                                <span class="cc-field-unit">Sec</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Time</div>
-                                        <div class="cc-metric-value -on">
-                                            <input type="text" class="cc-inline-input time-input" name="pad1_on_time" id="cool1-on-time-input">
-                                        </div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Time</div>
-                                        <div class="cc-metric-value -off">
-                                            <input type="text" class="cc-inline-input time-input" name="pad1_off_time" id="cool1-off-time-input">
+                                        <div>
+                                            <span class="cc-field-label">Off Time</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input time-input" name="pad1_off_time" id="cool1-off-time-input">
+                                                <span class="cc-field-unit">Sec</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Cool 2 -->
-                            <div class="cc-device-card" data-device="cool2">
+                            <div class="cc-device-card" data-device="cool2" data-mode="cool" data-type="cool">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Cool 2</p>
-                                    <div class="cc-status-chips">
-                                        <span class="badge badge-success cc-chip -on">On</span>
-                                        <span class="badge badge-danger cc-chip -off">Off</span>
-                                    </div>
+                                    <span class="cc-status-pill">ON</span>
                                 </div>
                                 <div class="cc-device-body">
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Temp</div>
-                                        <div class="cc-metric-value -on">
-                                            <input type="text" class="cc-inline-input temp-input" name="pad2_on_temp" id="cool2-on-temp-input">
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Temp</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input temp-input" name="pad2_on_temp" id="cool2-on-temp-input">
+                                                <span class="cc-field-unit">&deg;C</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="cc-field-label">Off Temp</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input temp-input" name="pad2_off_temp" id="cool2-off-temp-input">
+                                                <span class="cc-field-unit">&deg;C</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Temp</div>
-                                        <div class="cc-metric-value -off">
-                                            <input type="text" class="cc-inline-input temp-input" name="pad2_off_temp" id="cool2-off-temp-input">
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Time</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input time-input" name="pad2_on_time" id="cool2-on-time-input">
+                                                <span class="cc-field-unit">Sec</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Time</div>
-                                        <div class="cc-metric-value -on">
-                                            <input type="text" class="cc-inline-input time-input" name="pad2_on_time" id="cool2-on-time-input">
-                                        </div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Time</div>
-                                        <div class="cc-metric-value -off">
-                                            <input type="text" class="cc-inline-input time-input" name="pad2_off_time" id="cool2-off-time-input">
+                                        <div>
+                                            <span class="cc-field-label">Off Time</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input time-input" name="pad2_off_time" id="cool2-off-time-input">
+                                                <span class="cc-field-unit">Sec</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Heater -->
-                            <div class="cc-device-card" data-device="heater">
+                            <div class="cc-device-card" data-device="heater" data-mode="heat" data-type="heat">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Heater</p>
-                                    <div class="cc-status-chips">
-                                        <span class="badge badge-success cc-chip -on">On</span>
-                                        <span class="badge badge-danger cc-chip -off">Off</span>
-                                    </div>
+                                    <span class="cc-status-pill">ON</span>
                                 </div>
                                 <div class="cc-device-body">
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Temp</div>
-                                        <div class="cc-metric-value -on">
-                                            <input type="text" class="cc-inline-input temp-input" name="heat_on_temp" id="heater-on-temp-input">
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Temp</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input temp-input" name="heat_on_temp" id="heater-on-temp-input">
+                                                <span class="cc-field-unit">&deg;C</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="cc-field-label">Off Temp</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input temp-input" name="heat_off_temp" id="heater-off-temp-input">
+                                                <span class="cc-field-unit">&deg;C</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Temp</div>
-                                        <div class="cc-metric-value -off">
-                                            <input type="text" class="cc-inline-input temp-input" name="heat_off_temp" id="heater-off-temp-input">
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Time</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input time-input" name="heat_on_time" id="heater-on-time-input">
+                                                <span class="cc-field-unit">Sec</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Time</div>
-                                        <div class="cc-metric-value -on">
-                                            <input type="text" class="cc-inline-input time-input" name="heat_on_time" id="heater-on-time-input">
-                                        </div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Time</div>
-                                        <div class="cc-metric-value -off">
-                                            <input type="text" class="cc-inline-input time-input" name="heat_off_time" id="heater-off-time-input">
+                                        <div>
+                                            <span class="cc-field-label">Off Time</span>
+                                            <div class="cc-field-box">
+                                                <input type="text" class="cc-inline-input time-input" name="heat_off_time" id="heater-off-time-input">
+                                                <span class="cc-field-unit">Sec</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Light (no persisted setpoints yet — read-only) -->
-                            <div class="cc-device-card">
+                            <div class="cc-device-card" data-type="static">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Light</p>
-                                    <div class="cc-status-chips">
-                                        <span class="badge badge-success cc-chip -on">On</span>
-                                        <span class="badge badge-danger cc-chip -off">Off</span>
-                                    </div>
+                                    <span class="cc-status-pill -off">OFF</span>
                                 </div>
                                 <div class="cc-device-body">
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Temp</div>
-                                        <div class="cc-metric-value -on">45.0</div>
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Temp</span>
+                                            <div class="cc-field-box"><span class="cc-field-static">45.0</span><span class="cc-field-unit">&deg;C</span></div>
+                                        </div>
+                                        <div>
+                                            <span class="cc-field-label">Off Temp</span>
+                                            <div class="cc-field-box"><span class="cc-field-static">45.0</span><span class="cc-field-unit">&deg;C</span></div>
+                                        </div>
                                     </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Temp</div>
-                                        <div class="cc-metric-value -off">45.0</div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Time</div>
-                                        <div class="cc-metric-value -on">45.0</div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Time</div>
-                                        <div class="cc-metric-value -off">45.0</div>
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Time</span>
+                                            <div class="cc-field-box"><span class="cc-field-static">45.0</span><span class="cc-field-unit">Sec</span></div>
+                                        </div>
+                                        <div>
+                                            <span class="cc-field-label">Off Time</span>
+                                            <div class="cc-field-box"><span class="cc-field-static">45.0</span><span class="cc-field-unit">Sec</span></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -508,58 +552,60 @@
 
                         <!-- wide extras (read-only, no backing fields yet) -->
                         <div class="cc-device-grid -wide mt-3">
-                            <div class="cc-device-card">
+                            <div class="cc-device-card" data-type="static">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Extra 1</p>
-                                    <div class="cc-status-chips">
-                                        <span class="badge badge-success cc-chip -on">On</span>
-                                        <span class="badge badge-danger cc-chip -off">Off</span>
-                                    </div>
+                                    <span class="cc-status-pill -off">OFF</span>
                                 </div>
                                 <div class="cc-device-body">
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Temp</div>
-                                        <div class="cc-metric-value -on">45.0</div>
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Temp</span>
+                                            <div class="cc-field-box"><span class="cc-field-static">45.0</span><span class="cc-field-unit">&deg;C</span></div>
+                                        </div>
+                                        <div>
+                                            <span class="cc-field-label">Off Temp</span>
+                                            <div class="cc-field-box"><span class="cc-field-static">45.0</span><span class="cc-field-unit">&deg;C</span></div>
+                                        </div>
                                     </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Temp</div>
-                                        <div class="cc-metric-value -off">45.0</div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Time</div>
-                                        <div class="cc-metric-value -on">45.0</div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Time</div>
-                                        <div class="cc-metric-value -off">45.0</div>
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Time</span>
+                                            <div class="cc-field-box"><span class="cc-field-static">45.0</span><span class="cc-field-unit">Sec</span></div>
+                                        </div>
+                                        <div>
+                                            <span class="cc-field-label">Off Time</span>
+                                            <div class="cc-field-box"><span class="cc-field-static">45.0</span><span class="cc-field-unit">Sec</span></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="cc-device-card">
+                            <div class="cc-device-card" data-type="static">
                                 <div class="cc-device-head">
                                     <p class="cc-device-name">Extra 2</p>
-                                    <div class="cc-status-chips">
-                                        <span class="badge badge-success cc-chip -on">On</span>
-                                        <span class="badge badge-danger cc-chip -off">Off</span>
-                                    </div>
+                                    <span class="cc-status-pill -off">OFF</span>
                                 </div>
                                 <div class="cc-device-body">
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Temp</div>
-                                        <div class="cc-metric-value -on">45.0</div>
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Temp</span>
+                                            <div class="cc-field-box"><span class="cc-field-static">45.0</span><span class="cc-field-unit">&deg;C</span></div>
+                                        </div>
+                                        <div>
+                                            <span class="cc-field-label">Off Temp</span>
+                                            <div class="cc-field-box"><span class="cc-field-static">45.0</span><span class="cc-field-unit">&deg;C</span></div>
+                                        </div>
                                     </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Temp</div>
-                                        <div class="cc-metric-value -off">45.0</div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">On Time</div>
-                                        <div class="cc-metric-value -on">45.0</div>
-                                    </div>
-                                    <div class="cc-metric-row">
-                                        <div class="cc-metric-label">Off Time</div>
-                                        <div class="cc-metric-value -off">45.0</div>
+                                    <div class="cc-field-grid">
+                                        <div>
+                                            <span class="cc-field-label">On Time</span>
+                                            <div class="cc-field-box"><span class="cc-field-static">45.0</span><span class="cc-field-unit">Sec</span></div>
+                                        </div>
+                                        <div>
+                                            <span class="cc-field-label">Off Time</span>
+                                            <div class="cc-field-box"><span class="cc-field-static">45.0</span><span class="cc-field-unit">Sec</span></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -584,23 +630,38 @@
         window.currentData = null;
         var isDirty = false; // true once the user edits a field, until Save is submitted
 
-        // ---- min/max bounds config (raw controller values, i.e. before /10 scaling) ----
-        // Adjust these to match your real hardware limits.
+        // ---- min/max bounds config (real-world decimal values, e.g. 25.5°C) ----
+        // Setpoints are entered/displayed as real decimals but stored in the DB
+        // as raw integers with the decimal stripped (25.5 -> 255), same scaling
+        // already used for the live sensor readouts.
         var TEMP_MIN = 0;      // °C
-        var TEMP_MAX = 50;     // °C — values are stored/entered as real decimals (e.g. 25.0), not scaled ints
+        var TEMP_MAX = 50;     // °C
         var TIME_MIN = 0;      // seconds
         var TIME_MAX = 9999;   // seconds
+        var STEP = 0.1;        // smallest temp increment
 
-        // Device groups this form can edit, mapped to their input id prefixes.
+        // Device groups this form can edit, mapped to their input id prefixes,
+        // and whether they use "cool" logic (On Temp > Off Temp: fans, pads)
+        // or "heat" logic (Off Temp > On Temp: brooder heater).
         var EDITABLE_DEVICES = [];
-        for (var i = 1; i <= 12; i++) EDITABLE_DEVICES.push('fan' + i);
-        EDITABLE_DEVICES.push('cool1', 'cool2', 'heater');
+        for (var i = 1; i <= 12; i++) EDITABLE_DEVICES.push({ id: 'fan' + i, mode: 'cool' });
+        EDITABLE_DEVICES.push({ id: 'cool1', mode: 'cool' });
+        EDITABLE_DEVICES.push({ id: 'cool2', mode: 'cool' });
+        EDITABLE_DEVICES.push({ id: 'heater', mode: 'heat' });
 
+        // Raw DB integer -> display decimal (300 -> 30.0)
         function formatTemp(val) {
             if (val === null || val === undefined || val === '') return '';
             var num = parseFloat(val);
-            if (isNaN(num)) return val;
+            if (isNaN(num)) return '';
             return (num / 10).toFixed(1);
+        }
+
+        // Display decimal -> raw DB integer (30.5 -> 305)
+        function toRawTemp(val) {
+            var num = parseFloat(val);
+            if (isNaN(num)) return '';
+            return Math.round(num * 10).toString();
         }
 
         // Fetch data initially
@@ -665,37 +726,37 @@
             var data = window.currentData;
 
             @for($i=1;$i<=12;$i++)
-            $('#fan{{$i}}-on-temp-input').val(data.fan{{$i}}_on_temp ?? '');
-            $('#fan{{$i}}-off-temp-input').val(data.fan{{$i}}_off_temp ?? '');
+            $('#fan{{$i}}-on-temp-input').val(formatTemp(data.fan{{$i}}_on_temp));
+            $('#fan{{$i}}-off-temp-input').val(formatTemp(data.fan{{$i}}_off_temp));
             $('#fan{{$i}}-on-time-input').val(data.fan{{$i}}_on_time ?? '');
             $('#fan{{$i}}-off-time-input').val(data.fan{{$i}}_off_time ?? '');
             @endfor
 
             // cool1
-            $('#cool1-on-temp-input').val(data.pad1_on_temp ?? '');
-            $('#cool1-off-temp-input').val(data.pad1_off_temp ?? '');
+            $('#cool1-on-temp-input').val(formatTemp(data.pad1_on_temp));
+            $('#cool1-off-temp-input').val(formatTemp(data.pad1_off_temp));
             $('#cool1-on-time-input').val(data.pad1_on_time ?? '');
             $('#cool1-off-time-input').val(data.pad1_off_time ?? '');
 
             // cool2
-            $('#cool2-on-temp-input').val(data.pad2_on_temp ?? '');
-            $('#cool2-off-temp-input').val(data.pad2_off_temp ?? '');
+            $('#cool2-on-temp-input').val(formatTemp(data.pad2_on_temp));
+            $('#cool2-off-temp-input').val(formatTemp(data.pad2_off_temp));
             $('#cool2-on-time-input').val(data.pad2_on_time ?? '');
             $('#cool2-off-time-input').val(data.pad2_off_time ?? '');
 
-            // heat
-            $('#heater-on-temp-input').val(data.heat_on_temp ?? '');
-            $('#heater-off-temp-input').val(data.heat_off_temp ?? '');
+            // heat (brooder) — Off Temp > On Temp
+            $('#heater-on-temp-input').val(formatTemp(data.heat_on_temp));
+            $('#heater-off-temp-input').val(formatTemp(data.heat_off_temp));
             $('#heater-on-time-input').val(data.heat_on_time ?? '');
             $('#heater-off-time-input').val(data.heat_off_time ?? '');
         }
 
         /**
-         * Strips anything that isn't a digit (or a single decimal point for
-         * temps) as the user types, then clamps the numeric value down to
-         * `max` the instant it would exceed it. Values below `min` are only
-         * corrected on blur, so partial typing (e.g. an empty field, or "0."
-         * while entering "0.5") isn't fought mid-keystroke.
+         * Strips anything that isn't a digit (or a single decimal point) as
+         * the user types, then clamps the numeric value to [min, max]. Values
+         * below min are only corrected on blur (see clampMinOnBlur), so
+         * partial typing (an empty field, or "0." while entering "0.5")
+         * isn't fought mid-keystroke.
          */
         function clampTempInput($el, max) {
             var raw = $el.val();
@@ -708,7 +769,7 @@
 
             var num = parseFloat(cleaned);
             if (!isNaN(num) && num > max) {
-                cleaned = (Math.round(max * 10) / 10).toString();
+                cleaned = (Math.round(max * 10) / 10).toFixed(1);
                 $el.val(cleaned);
                 num = max;
             }
@@ -738,21 +799,34 @@
         }
 
         /**
-         * Enforces this device's bounds live: each temp is capped at
-         * TEMP_MAX, each time at TIME_MAX, and — since Off Temp must always
-         * be less than On Temp — Off Temp's effective ceiling is whatever
-         * On Temp currently holds. The user simply cannot type a value past
-         * these limits; there's nothing left to flag as an error.
+         * Enforces this device's bounds live, both temps clamped to
+         * [TEMP_MIN, TEMP_MAX], and the On/Off relationship enforced
+         * according to device mode:
+         *   - "cool" (fans, cool pads): On Temp must stay > Off Temp,
+         *     so Off Temp's ceiling is On Temp - STEP.
+         *   - "heat" (brooder heater): Off Temp must stay > On Temp,
+         *     so On Temp's ceiling is Off Temp - STEP.
+         * The user simply cannot type a value that breaks the relationship;
+         * there's nothing left to flag as a submit-time error.
          */
-        function enforceDeviceBounds(device) {
+        function enforceDeviceBounds(device, mode) {
             var $onTemp  = $('#' + device + '-on-temp-input');
             var $offTemp = $('#' + device + '-off-temp-input');
             var $onTime  = $('#' + device + '-on-time-input');
             var $offTime = $('#' + device + '-off-time-input');
 
-            var onTempVal = clampTempInput($onTemp, TEMP_MAX);
-            var offCeiling = (onTempVal !== null) ? Math.max(TEMP_MIN, onTempVal - 0.1) : TEMP_MAX;
-            clampTempInput($offTemp, offCeiling);
+            if (mode === 'heat') {
+                // Off Temp drives the ceiling; On Temp must stay below it.
+                var offTempVal = clampTempInput($offTemp, TEMP_MAX);
+                var onCeiling = (offTempVal !== null) ? Math.max(TEMP_MIN, offTempVal - STEP) : TEMP_MAX;
+                clampTempInput($onTemp, onCeiling);
+            } else {
+                // Cool logic (fans / pads): On Temp drives the ceiling;
+                // Off Temp must stay below it.
+                var onTempVal = clampTempInput($onTemp, TEMP_MAX);
+                var offCeiling = (onTempVal !== null) ? Math.max(TEMP_MIN, onTempVal - STEP) : TEMP_MAX;
+                clampTempInput($offTemp, offCeiling);
+            }
 
             clampTimeInput($onTime, TIME_MAX);
             clampTimeInput($offTime, TIME_MAX);
@@ -765,13 +839,62 @@
             $('#dirty-note').addClass('-visible');
             var $card = $(this).closest('.cc-device-card');
             var device = $card.data('device');
-            if (device) enforceDeviceBounds(device);
+            var mode = $card.data('mode') || 'cool';
+            if (device) enforceDeviceBounds(device, mode);
+        });
+
+        /**
+         * Arrow-key increment/decrement. These inputs are type="text" (needed
+         * for the custom masking/clamping above), so there's no native number
+         * spinner — the browser does nothing with Up/Down out of the box.
+         * This wires that up manually:
+         *   - Up/Down: ±STEP for temps, ±1 for times
+         *   - Shift+Up/Down: ±1.0 for temps, ±10 for times (bigger jump)
+         * Result is clamped the same way typed input is, including the
+         * On/Off relationship for the device's mode.
+         */
+        $(document).on('keydown', '.temp-input, .time-input', function(e) {
+            if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+            e.preventDefault();
+
+            var $el = $(this);
+            var isTemp = $el.hasClass('temp-input');
+            var dir = (e.key === 'ArrowUp') ? 1 : -1;
+            var step = isTemp ? (e.shiftKey ? 1.0 : STEP) : (e.shiftKey ? 10 : 1);
+
+            var current = parseFloat($el.val());
+            if (isNaN(current)) current = isTemp ? TEMP_MIN : TIME_MIN;
+
+            var next = isTemp
+                ? Math.round((current + dir * step) * 10) / 10
+                : Math.round(current + dir * step);
+
+            // Respect the absolute floor here; the ceiling (including the
+            // On/Off relationship) is enforced right after via
+            // enforceDeviceBounds, same as if the user had typed the value.
+            var floor = isTemp ? TEMP_MIN : TIME_MIN;
+            if (next < floor) next = floor;
+
+            $el.val(isTemp ? next.toFixed(1) : String(next));
+
+            isDirty = true;
+            $('#dirty-note').addClass('-visible');
+            var $card = $el.closest('.cc-device-card');
+            var device = $card.data('device');
+            var mode = $card.data('mode') || 'cool';
+            if (device) enforceDeviceBounds(device, mode);
         });
 
         // On blur, pull anything left below the minimum back up to it
-        // (covers a field emptied then left blank, or a stray "0").
+        // (covers a field emptied then left blank, or a stray "0"), and
+        // normalize to one decimal place for display.
         $(document).on('blur', '.temp-input', function() {
             clampMinOnBlur($(this), TEMP_MIN, true);
+            var raw = $(this).val();
+            if (raw !== '') {
+                var num = parseFloat(raw);
+                if (!isNaN(num)) $(this).val(num.toFixed(1));
+            }
         });
         $(document).on('blur', '.time-input', function() {
             clampMinOnBlur($(this), TIME_MIN, false);
@@ -789,12 +912,22 @@
             // this re-enforces bounds in case fields were filled out of order
             // (e.g. Off Temp typed before On Temp existed).
             EDITABLE_DEVICES.forEach(function (device) {
-                enforceDeviceBounds(device);
+                enforceDeviceBounds(device.id, device.mode);
             });
 
             $('#form-error-msg').addClass('d-none').text('');
+
+            // Temp inputs are shown/edited as real decimals (e.g. 25.5) but
+            // the DB stores raw integers with the decimal stripped (255) —
+            // same convention as the sensor fields. Convert right before the
+            // browser serializes the form, so the UI never has to juggle two
+            // representations of the same field at once.
+            $('.temp-input').each(function() {
+                var raw = $(this).val();
+                if (raw !== '') $(this).val(toRawTemp(raw));
+            });
+
             isDirty = false; // page will reload/redirect on success, resetting state anyway
-            // Temp inputs already hold raw controller values — no scaling needed.
         });
     });
 </script>
