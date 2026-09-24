@@ -36,10 +36,14 @@
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Custom ID</th>
                             <th>House Temperature</th>
                             <th>Outside Temperature</th>
                             <th>Brooder Temperature</th>
                             <th>Humidity</th>
+                            <th>Outside Humidity</th>
                             <th>Fan 1 On Time</th>
                             <th>Fan 1 Off Time</th>
                             <th>Fan 2 On Time</th>
@@ -96,8 +100,7 @@
                             <th>Cool 1 Off Temp</th>
                             <th>Cool 2 On Temp</th>
                             <th>Cool 2 Off Temp</th>
-                            <th>Date</th>
-                            <th>Time</th>
+
                             <th>Action</th>
 
 
@@ -110,11 +113,16 @@
                     <tbody>
                         @foreach($records as $datas)
                         <tr>
-                        <td>{{$datas->custom_id}}</td>
+
+                            <td>{{ $loop->index + 1 }}</td>
+                            <td>{{ $datas->date }}</td>
+                            <td>{{ $datas->time }}</td>
+                            <td>{{$datas->custom_id}}</td>
                             <td>{{ $datas->temperature }}</td>
                             <td>{{ $datas->temp3_outside }}</td>
                             <td>{{ $datas->temp2_brooder }}</td>
                             <td>{{ $datas->humidity }}</td>
+                            <td>{{ $datas->humidity2 ?? '' }}</td>
                             <td>{{ $datas->fan1_on_time }}</td>
                             <td>{{ $datas->fan1_off_time }}</td>
                             <td>{{ $datas->fan2_on_time }}</td>
@@ -172,8 +180,7 @@
                             <td>{{ $datas->pad1_off_temp }}</td>
                             <td>{{ $datas->pad2_on_temp }}</td>
                             <td>{{ $datas->pad2_off_temp }}</td>
-                            <td>{{ $datas->date }}</td>
-                            <td>{{ $datas->time }}</td>
+
 
                             <td>
                                 <form action="{{ url('/cr1/del/' . $datas->custom_id) }}" method="POST"
