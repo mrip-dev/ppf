@@ -667,6 +667,7 @@
             $('#brooder_temp').text(formatTemp(data.temp2_brooder));
             $('#outside_temp').text(formatTemp(data.temp3_outside));
             $('#humidity').text(data.humidity);
+            $('#outside-humi').text(data.humidity2);
         }
 
         function updateFormAction() {
