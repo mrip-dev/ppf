@@ -3,9 +3,9 @@
 
 <div class="layout-px-spacing">
 	<div class="middle-content container-xxl p-0">
-		
+
 		<div class="col-xl-12 col-lg-12 col-sm-12 table">
-        
+
         @if(session('success'))
         <div class="alert alert-success">
             {{ session('success') }}
@@ -30,7 +30,7 @@
                     </div> -->
                 </div>
 		<table id="flock-standard" class="table">
-				
+
              <thead>
             <tr>
                 <th>ID</th>
@@ -45,8 +45,8 @@
                 <th>Cumm Feed Bags Ross</th>
                 <th>Cumm Feed Bags Current</th>
 
-             
-               
+
+
             </tr>
         </thead>
         <tbody>
@@ -59,18 +59,19 @@
                 <tr>
 <?php $usedfeed=App\Http\Controllers\Controller::getFeedUsedByAge2($datas->day);
  $rem_b=$usedfeed['b']-$usedfeed['m']?>
- 
+
         <td>{{$datas->id}}</td>
-      
+
         <td>{{$datas->day}}</td>
         <td>{{$datas->feed}}</td>
-        <td><?Php $cf=$usedfeed['f']*50000/$rem_b; echo round($cf);  ?></td>
+         <td>
+            <?Php if($rem_b > 0) { $cf=$usedfeed['f']*50000/$rem_b; echo number_format($cf,2); } else { echo $cf=0; }  ?></td>
         <td><?Php echo round($datas->feed-$cf);  ?></td>
         <?php $commulative_feedross=$commulative_feedross+$datas->feed;
         $commulative_feedcf=$commulative_feedcf+$cf;
-        
-       
-  
+
+
+
   ?>
         <td>{{$commulative_feedross}}</td>
         <td><?Php  echo round($commulative_feedcf);?></td>
@@ -78,24 +79,24 @@
         <td>{{$usedfeed['f']}}</td>
         <?php $commulative_fbross=$commulative_fbross+$rb;
         $commulative_fbc= $commulative_fbc+$usedfeed['f'];
-        
-       
-  
+
+
+
   ?>
        <td><?Php  echo round($commulative_fbross);?></td>
         <td><?Php  echo round($commulative_fbc);?></td>
-        
-      
-      
-                    
-       
-                  
+
+
+
+
+
+
                 </tr>
                 @endforeach
         </tbody>
-       
+
     </table>
-   
+
 			</div>
 		</div>
 	</div>

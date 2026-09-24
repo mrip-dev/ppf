@@ -788,7 +788,7 @@
 
         // Fields are always editable — no Edit/Cancel toggle. Typing marks the
         // form dirty (so polling won't clobber it) and clamps in real time.
-        $(document).on('input', '.temp-input, .time-input', function() {
+        $(document).on('change', '.temp-input, .time-input', function() {
             isDirty = true;
             $('#dirty-note').addClass('-visible');
             var $card = $(this).closest('.cc-device-card');

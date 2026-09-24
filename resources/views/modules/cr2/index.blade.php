@@ -115,7 +115,7 @@
                             <td>{{ $datas->temp3_outside }}</td>
                             <td>{{ $datas->temp2_brooder }}</td>
                             <td>{{ $datas->humidity }}</td>
-                            <td>{{ $datas->fan1_on_temp }}</td>
+                            <td>{{ $datas->fan1_on_time }}</td>
                             <td>{{ $datas->fan1_off_time }}</td>
                             <td>{{ $datas->fan2_on_time }}</td>
                             <td>{{ $datas->fan2_off_time }}</td>
@@ -143,7 +143,7 @@
                             <td>{{ $datas->pad1_off_time }}</td>
                             <td>{{ $datas->pad2_on_time }}</td>
                             <td>{{ $datas->pad2_off_time }}</td>
-                            
+
                             <td>{{ $datas->fan1_on_temp }}</td>
                             <td>{{ $datas->fan1_off_temp }}</td>
                             <td>{{ $datas->fan2_on_temp }}</td>
@@ -174,7 +174,7 @@
                             <td>{{ $datas->pad2_off_temp }}</td>
                             <td>{{ $datas->date }}</td>
                             <td>{{ $datas->time }}</td>
-                            
+
                             <td>
                                 <form action="{{ url('/cr2/del/' . $datas->custom_id) }}" method="POST"
                                     onsubmit="return confirm('Are you sure you want to delete this record?');">
