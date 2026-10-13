@@ -15,36 +15,28 @@ class ControllerManagementController2 extends Controller
 {
     public function chunkWiseData(Request $request)
     {
-        // Retrieve global settings, assuming this method returns necessary information
         $farm = $this->globalSetting();
-        $device_id=$farm->device_id_shed2;
-        // Retrieve the last 50 records ordered by date and time
+        $device_id = $farm->device_id_shed2;
+
         $columns = \Schema::getColumnListing('esp32_table_dht11_leds_record');
-        $columns[] = \DB::raw('id as custom_id');
-        $records = CNRecord::orderby('date', 'desc')->orderby('time', 'desc')->where('board',$device_id)->select($columns)->get();
 
-        // Initialize an empty array to store filtered records
-        $filteredRecords = [];
+        // Latest id in each 10-minute bucket (no LIMIT, so a plain subquery works in MariaDB)
+        $latestIds = CNRecord::query()
+            ->where('board', $device_id)
+            ->selectRaw('MAX(id) as id')
+            ->groupByRaw('UNIX_TIMESTAMP(TIMESTAMP(`date`, `time`)) DIV 600');
 
-        // Initialize a variable to keep track of the last included record's timestamp
-        $lastIncludedTimestamp = null;
+        $records = CNRecord::query()
+            ->select($columns)
+            ->addSelect('id as custom_id')
+            ->whereIn('id', function ($q) use ($latestIds) {
+                $q->fromSub($latestIds, 't')->select('t.id');
+            })
+            ->orderByDesc('date')
+            ->orderByDesc('time')
+            ->get();
 
-        foreach ($records as $record) {
-            // Combine date and time into a single Carbon instance
-            $currentTimestamp = Carbon::createFromFormat('Y-m-d H:i:s', $record->date . ' ' . $record->time);
-
-            // If it's the first record or at least 10 minutes have passed since the last included record
-            if ($lastIncludedTimestamp === null || $currentTimestamp->diffInMinutes($lastIncludedTimestamp) >= 10) {
-                // Add the record to the filtered records array
-                $filteredRecords[]= $record;
-
-                // Update the last included timestamp
-                $lastIncludedTimestamp = $currentTimestamp;
-            }
-        }
-
-        // Return the filtered records as a JSON response
-        return view('modules.cr2.index', ['records' => $filteredRecords]);
+        return view('modules.cr2.index', ['records' => $records]);
     }
 
     /**
@@ -55,22 +47,25 @@ class ControllerManagementController2 extends Controller
      * Show the form for creating a new resource.
      */
     public function index()
-    {   $farm=$this->globalSetting();
+    {
+        $farm = $this->globalSetting();
         // $data = DB::table('esp32_table_dht11_leds_update')->latest()->first();
 
         return view('modules.controller-management2.index');
     }
     public function fetchData(Request $request)
-    {    $farm=$this->globalSetting();
-        $device_id=$farm->device_id_shed2;
-        $data=CNStatus::orderby('date','desc')->orderby('time','desc')->where('device_id',$device_id)->first();
+    {
+        $farm = $this->globalSetting();
+        $device_id = $farm->device_id_shed2;
+        $data = CNStatus::orderby('date', 'desc')->orderby('time', 'desc')->where('device_id', $device_id)->first();
         return response()->json(['data' => $data]);
     }
-    public function updateStatus(Request $request){
+    public function updateStatus(Request $request)
+    {
 
-        $data=CNStatus::where('device_id',$request->id);
+        $data = CNStatus::where('device_id', $request->id);
         $data->update($request->all());
-        return response()->json(['data' => $data,'message' => 'Success']);
+        return response()->json(['data' => $data, 'message' => 'Success']);
     }
     // public function updateStatus(Request $request)
     // {
@@ -134,21 +129,21 @@ class ControllerManagementController2 extends Controller
      */
     public function edit($id)
     {
-        $flock=$this->activeFlock();
-        $farm=$this->globalSetting();
-        $data=CNStatus::find($id);
+        $flock = $this->activeFlock();
+        $farm = $this->globalSetting();
+        $data = CNStatus::find($id);
         return view('modules.controller-management2.edit', compact('data'));
     }
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request,$id)
+    public function update(Request $request, $id)
     {
 
-        $flock=$this->activeFlock();
-        $farm=$this->globalSetting();
-        $data=CNStatus::find($id);
-         $data->update(array_merge($request->all(), [
+        $flock = $this->activeFlock();
+        $farm = $this->globalSetting();
+        $data = CNStatus::find($id);
+        $data->update(array_merge($request->all(), [
             'save' => 1,
         ]));
 

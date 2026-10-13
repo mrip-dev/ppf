@@ -24,36 +24,31 @@ class ControllerManagementController extends Controller
 
     public function chunkWiseData(Request $request)
     {
-        // Retrieve global settings, assuming this method returns necessary information
         $farm = $this->globalSetting();
         $device_id = $farm->device_id_shed1;
-        // Retrieve the last 50 records ordered by date and time
+
         $columns = \Schema::getColumnListing('esp32_table_dht11_leds_record');
-        $columns[] = \DB::raw('id as custom_id');
-        $records = CNRecord::orderby('date', 'desc')->orderby('time', 'desc')->where('board', $device_id)->select($columns)->get();
 
-        // Initialize an empty array to store filtered records
-        $filteredRecords = [];
+        // Latest id per 10-minute bucket, limited to the newest 500 buckets
+        $latestIds = CNRecord::query()
+            ->where('board', $device_id)
+            ->where('date', '>=', now()->subDays(3)->toDateString()) // narrows the scan, big speedup
+            ->selectRaw('MAX(id) as id')
+            ->groupByRaw('UNIX_TIMESTAMP(TIMESTAMP(`date`, `time`)) DIV 600')
+            ->orderByDesc('id')
+            ->limit(500);
 
-        // Initialize a variable to keep track of the last included record's timestamp
-        $lastIncludedTimestamp = null;
+        $records = CNRecord::query()
+            ->select($columns)
+            ->addSelect('id as custom_id')
+            ->whereIn('id', function ($q) use ($latestIds) {
+                $q->fromSub($latestIds, 't')->select('t.id');
+            })
+            ->orderByDesc('date')
+            ->orderByDesc('time')
+            ->get();
 
-        foreach ($records as $record) {
-            // Combine date and time into a single Carbon instance
-            $currentTimestamp = Carbon::createFromFormat('Y-m-d H:i:s', $record->date . ' ' . $record->time);
-
-            // If it's the first record or at least 10 minutes have passed since the last included record
-            if ($lastIncludedTimestamp === null || $currentTimestamp->diffInMinutes($lastIncludedTimestamp) >= 10) {
-                // Add the record to the filtered records array
-                $filteredRecords[] = $record;
-
-                // Update the last included timestamp
-                $lastIncludedTimestamp = $currentTimestamp;
-            }
-        }
-
-        // Return the filtered records as a JSON response
-        return view('modules.cr1.index', ['records' => $filteredRecords]);
+        return view('modules.cr1.index', ['records' => $records]);
     }
 
     public function index()
