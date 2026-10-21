@@ -10,9 +10,71 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\CNRecord;
 use Illuminate\Support\Carbon;
+use App\Jobs\ExportCnRecordsJob;
+use App\Models\ExportRequest;
+use Illuminate\Support\Facades\Storage;
 
 class ControllerManagementController2 extends Controller
 {
+
+
+
+    public function exportRequest(Request $request)
+    {
+        $data = $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $farm = $this->globalSetting();
+
+        $export = ExportRequest::create([
+            'user_id'    => auth()->id(),
+            'device_id'  => $farm->device_id_shed2,
+            'start_date' => $data['start_date'],
+            'end_date'   => $data['end_date'],
+        ]);
+
+        ExportCnRecordsJob::dispatch($export->id);
+
+        return back()->with('success', "Export #{$export->id} started. You can download it below once it is ready.");
+    }
+
+    public function exportStatus()
+    {
+        $farm = $this->globalSetting();
+
+        $exports = ExportRequest::where('user_id', auth()->id())
+            ->where('device_id', $farm->device_id_shed2)   // only shed 2 exports
+            ->latest()->limit(10)->get()
+            ->map(fn($e) => [
+                'id'       => $e->id,
+                'range'    => $e->start_date->toDateString() . ' → ' . $e->end_date->toDateString(),
+                'status'   => $e->status,
+                'progress' => $e->progress,
+                'rows'     => $e->processed_rows,
+                'error'    => $e->error,
+                'download' => $e->status === 'completed' ? url('/cr2/export/' . $e->id . '/download') : null,
+            ]);
+
+        return response()->json($exports);
+    }
+
+    public function exportDownload($id)
+    {
+        $farm = $this->globalSetting();
+
+        $export = ExportRequest::where('user_id', auth()->id())
+            ->where('device_id', $farm->device_id_shed2)
+            ->where('status', 'completed')
+            ->findOrFail($id);
+
+        abort_unless(Storage::disk('local')->exists($export->file_path), 404);
+
+        return Storage::disk('local')->download($export->file_path);
+    }
+
+
     public function chunkWiseData(Request $request)
     {
         $farm = $this->globalSetting();

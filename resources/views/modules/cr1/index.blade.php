@@ -29,6 +29,9 @@
                     </div>
                 </div>
                 <div class="row">
+                    {{-- cr1 index.blade.php --}}
+                    @include('partials.export-panel', ['shed' => 'shed1'])
+
 
                 </div>
                 <table id="zero-config" class="table">

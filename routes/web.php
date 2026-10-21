@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\ControllerManagementController;
+use App\Http\Controllers\ControllerManagementController2;
+use App\Http\Controllers\ExportRequestController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,48 +31,48 @@ Route::middleware([
     Route::get('/session-add', function () {
         return view('modules.sessions.add');
     });
-    
+
     //shed1
     Route::Resource('/shed1', App\Http\Controllers\Shed1LController::class);
-    Route::get('/shed1-report',[ App\Http\Controllers\Shed1LController::class,'report']);
+    Route::get('/shed1-report', [App\Http\Controllers\Shed1LController::class, 'report']);
     //shed2
     Route::Resource('/shed2', App\Http\Controllers\Shed2RController::class);
-    Route::get('/shed2-report',[ App\Http\Controllers\Shed2RController::class,'report']);
-    
-    
+    Route::get('/shed2-report', [App\Http\Controllers\Shed2RController::class, 'report']);
+
+
     //feed
     Route::Resource('/feed-inventory', App\Http\Controllers\FeedInventoryController::class);
-    
-    
+
+
     //med inventory
     Route::Resource('/medicine-inventory', App\Http\Controllers\MedicineInventoryController::class);
-    
+
     //diesel
     Route::Resource('/users', App\Http\Controllers\UserController::class);
     Route::Resource('/diesel', App\Http\Controllers\DieselController::class);
-    
+
     //wood
     Route::Resource('/wood', App\Http\Controllers\WoodController::class);
-    
+
     //medicine
     Route::Resource('/medicine', App\Http\Controllers\MedicineController::class);
-    
+
     //assets
     Route::Resource('/asset', App\Http\Controllers\AssetsController::class);
     Route::Resource('/category', App\Http\Controllers\SaleCategoryController::class);
-    
+
     //std 1
     Route::Resource('/std1', App\Http\Controllers\StdHouse1Controller::class);
-    
+
     //std2
     Route::Resource('/std2', App\Http\Controllers\StdHouse2Controller::class);
-    
+
     ///////sales
     Route::Resource('/sale', App\Http\Controllers\SaleController::class);
-    Route::get('/all-passes',[App\Http\Controllers\SaleController::class,'indexPasses']);
-    Route::get('/all-sales/{id}/{type}/{doc_no}',[App\Http\Controllers\SaleController::class,'allSales']);
-    Route::get('/print/{id}/{type}/{doc_no}',[App\Http\Controllers\SaleController::class,'print']);
-    Route::Post('/cancel-status/{id}',[App\Http\Controllers\SaleController::class,'cancelStatus'])->name('cancel-status');
+    Route::get('/all-passes', [App\Http\Controllers\SaleController::class, 'indexPasses']);
+    Route::get('/all-sales/{id}/{type}/{doc_no}', [App\Http\Controllers\SaleController::class, 'allSales']);
+    Route::get('/print/{id}/{type}/{doc_no}', [App\Http\Controllers\SaleController::class, 'print']);
+    Route::Post('/cancel-status/{id}', [App\Http\Controllers\SaleController::class, 'cancelStatus'])->name('cancel-status');
     //session
     Route::Resource('/session', App\Http\Controllers\FarmSessionController::class);
     //flock
@@ -93,4 +96,14 @@ Route::middleware([
     Route::post('/cr2/del/{id}', [App\Http\Controllers\ControllerManagementController2::class, 'delRecord'])->name('cr2.delete');
 
 
-}); 
+
+    Route::prefix('exports/{shed}')->where(['shed' => 'shed1|shed2', 'id' => '[0-9]+'])->group(function () {
+        Route::post('/',                 [ExportRequestController::class, 'store']);
+        Route::get('/status',            [ExportRequestController::class, 'status']);
+        Route::post('/clear-finished',   [ExportRequestController::class, 'clearFinished']);
+        Route::get('/{id}/download',     [ExportRequestController::class, 'download']);
+        Route::post('/{id}/cancel',      [ExportRequestController::class, 'cancel']);
+        Route::post('/{id}/retry',       [ExportRequestController::class, 'retry']);
+        Route::delete('/{id}',           [ExportRequestController::class, 'destroy']);
+    });
+});
