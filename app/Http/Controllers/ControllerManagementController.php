@@ -74,20 +74,6 @@ class ControllerManagementController extends Controller
         return Storage::disk('local')->download($export->file_path);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Display a listing of the resource.
      */
@@ -103,14 +89,7 @@ class ControllerManagementController extends Controller
 
         $columns = \Schema::getColumnListing('esp32_table_dht11_leds_record');
 
-        // Latest id per 10-minute bucket, limited to the newest 500 buckets
-        $latestIds = CNRecord::query()
-            ->where('board', $device_id)
-            ->where('date', '>=', now()->subDays(3)->toDateString()) // narrows the scan, big speedup
-            ->selectRaw('MAX(id) as id')
-            ->groupByRaw('UNIX_TIMESTAMP(TIMESTAMP(`date`, `time`)) DIV 600')
-            ->orderByDesc('id')
-            ->limit(500);
+        $latestIds = $this->latestCr1RecordIds($device_id);
 
         $records = CNRecord::query()
             ->select($columns)
@@ -123,6 +102,38 @@ class ControllerManagementController extends Controller
             ->get();
 
         return view('modules.cr1.index', ['records' => $records]);
+    }
+
+    public function clearDisplayedRecords(Request $request)
+    {
+        $request->validate([
+            'confirmation' => ['required', 'string', 'in:DELETE CR1 RECORDS'],
+        ]);
+
+        $deviceId = $this->globalSetting()->device_id_shed1;
+        $latestIds = $this->latestCr1RecordIds($deviceId);
+
+        $deleted = CNRecord::query()
+            ->whereIn('id', function ($query) use ($latestIds) {
+                $query->fromSub($latestIds, 't')->select('t.id');
+            })
+            ->delete();
+
+        return redirect()->back()->with(
+            'success',
+            "{$deleted} displayed CR1 record(s) deleted successfully."
+        );
+    }
+
+    private function latestCr1RecordIds($deviceId)
+    {
+        return CNRecord::query()
+            ->where('board', $deviceId)
+            ->where('date', '>=', now()->subDays(3)->toDateString())
+            ->selectRaw('MAX(id) as id')
+            ->groupByRaw('UNIX_TIMESTAMP(TIMESTAMP(`date`, `time`)) DIV 600')
+            ->orderByDesc('id')
+            ->limit(500);
     }
 
     public function index()
@@ -247,5 +258,63 @@ class ControllerManagementController extends Controller
 
         // Redirect back with a success message
         return redirect()->back()->with('success', 'Record deleted successfully.');
+    }
+
+
+    private const PURGE_CHUNK = 20000;
+
+    /** Shared filter: only this shed's records, never today's data. */
+    private function oldRecordsQuery(Request $request, string $shed)
+    {
+        abort_unless(in_array($shed, ['shed1', 'shed2'], true), 404);
+
+        $data = $request->validate([
+            'mode' => 'required|in:days,range',
+            'days' => 'required_if:mode,days|nullable|integer|min:1|max:3650',
+            'from' => 'required_if:mode,range|nullable|date',
+            'to'   => 'required_if:mode,range|nullable|date|after_or_equal:from|before:today',
+        ]);
+
+        $farm     = $this->globalSetting();
+        $deviceId = $shed === 'shed2' ? $farm->device_id_shed2 : $farm->device_id_shed1;
+        abort_if(empty($deviceId), 422, 'No device is configured for this shed.');
+
+        $q = CNRecord::query()->where('board', $deviceId);
+
+        if ($data['mode'] === 'days') {
+            $q->where('date', '<', now()->subDays((int) $data['days'])->toDateString());
+        } else {
+            $q->whereBetween('date', [$data['from'], $data['to']]);
+        }
+
+        return $q;
+    }
+
+    public function previewOldRecords(Request $request, string $shed)
+    {
+        $q = $this->oldRecordsQuery($request, $shed);
+
+        return response()->json([
+            'count' => (clone $q)->count(),
+            'min'   => (clone $q)->min('date'),
+            'max'   => (clone $q)->max('date'),
+        ]);
+    }
+
+    public function purgeOldRecords(Request $request, string $shed)
+    {
+        $request->validate(['confirmation' => ['required', 'in:DELETE OLD RECORDS']]);
+        set_time_limit(0);
+
+        // one batch per request; the UI keeps calling until done
+        $deleted = $this->oldRecordsQuery($request, $shed)
+            ->toBase()
+            ->limit(self::PURGE_CHUNK)
+            ->delete();
+
+        return response()->json([
+            'deleted' => $deleted,
+            'done'    => $deleted < self::PURGE_CHUNK,
+        ]);
     }
 }

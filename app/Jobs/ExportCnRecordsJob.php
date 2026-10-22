@@ -12,8 +12,10 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use OpenSpout\Common\Entity\Cell;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
+use OpenSpout\Common\Entity\Style\Style;
 use ZipArchive;
 
 class ExportCnRecordsJob implements ShouldQueue
@@ -65,14 +67,31 @@ class ExportCnRecordsJob implements ShouldQueue
         // ---- which rows? ----------------------------------------------------
         $ids = [];
         if ($interval > 0) {
-            // latest id in each N-minute bucket (same logic as the page)
-            $bucket = $interval * 60;
-            $ids = (clone $base)
-                ->selectRaw('MAX(id) AS id')
-                ->groupByRaw("UNIX_TIMESTAMP(TIMESTAMP(`date`, `time`)) DIV {$bucket}")
-                ->orderByRaw('MAX(id) DESC')
-                ->pluck('id')
-                ->all();
+            $bucket     = $interval * 60;
+            $bucketExpr = "UNIX_TIMESTAMP(TIMESTAMP(`date`, `time`)) DIV {$bucket}";
+
+            // 1) latest timestamp inside each bucket
+            $maxTs = (clone $base)
+                ->selectRaw('MAX(TIMESTAMP(`date`, `time`)) AS ts')
+                ->groupByRaw($bucketExpr);
+
+            // 2) the record(s) at that timestamp, newest first
+            $picked = DB::table($table)
+                ->where("{$table}.board", $export->device_id)
+                ->whereBetween("{$table}.date", [
+                    $export->start_date->toDateString(),
+                    $export->end_date->toDateString(),
+                ])
+                ->joinSub($maxTs, 'm', function ($j) use ($table) {
+                    $j->whereRaw("TIMESTAMP({$table}.`date`, {$table}.`time`) = m.ts");
+                })
+                ->orderByDesc("{$table}.date")
+                ->orderByDesc("{$table}.time")
+                ->orderByDesc("{$table}.id")
+                ->get(["{$table}.id", "{$table}.date", "{$table}.time"]);
+
+            // 3) if two records share the exact same second, keep only one
+            $ids   = $picked->unique(fn($r) => $r->date . ' ' . $r->time)->pluck('id')->all();
             $total = count($ids);
         } else {
             $total = (clone $base)->count();
@@ -83,16 +102,40 @@ class ExportCnRecordsJob implements ShouldQueue
         $rows = function () use ($interval, $ids, $base, $table, $keys) {
             if ($interval > 0) {
                 foreach (array_chunk($ids, self::CHUNK) as $chunk) {
-                    $set = DB::table($table)->select($keys)->whereIn('id', $chunk)->orderByDesc('id')->get();
-                    foreach ($set as $r) {
-                        yield $r;
+                    // fetch the chunk, then yield in the exact order of $chunk (date/time DESC)
+                    $set = DB::table($table)->select($keys)->whereIn('id', $chunk)->get()->keyBy('id');
+                    foreach ($chunk as $id) {
+                        if (isset($set[$id])) {
+                            yield $set[$id];
+                        }
                     }
                 }
-            } else {
-                // newest first, same as the page (id grows with time)
-                foreach ((clone $base)->select($keys)->lazyByIdDesc(self::CHUNK, 'id') as $r) {
+                return;
+            }
+
+            // Raw mode: keyset pagination on (date, time, id) DESC
+            $last = null;
+            while (true) {
+                $q = (clone $base)->select($keys)
+                    ->orderByDesc('date')->orderByDesc('time')->orderByDesc('id')
+                    ->limit(self::CHUNK);
+
+                if ($last) {
+                    $q->where(function ($w) use ($last) {
+                        $w->where('date', '<', $last->date)
+                            ->orWhere(fn($x) => $x->where('date', $last->date)->where('time', '<', $last->time))
+                            ->orWhere(fn($x) => $x->where('date', $last->date)->where('time', $last->time)->where('id', '<', $last->id));
+                    });
+                }
+
+                $set = $q->get();
+                if ($set->isEmpty()) {
+                    break;
+                }
+                foreach ($set as $r) {
                     yield $r;
                 }
+                $last = $set->last();
             }
         };
 
@@ -135,8 +178,28 @@ class ExportCnRecordsJob implements ShouldQueue
             $abs  = $disk->path("{$tmpDir}/{$name}");
 
             $writer = new Writer();
+
+            // Column widths (must be set BEFORE openToFile)
+            $opt = $writer->getOptions();
+            $opt->setColumnWidth(8, 1);                            // ID
+            $opt->setColumnWidth(14, 2);                           // Date
+            $opt->setColumnWidth(12, 3);                           // Time
+            $opt->setColumnWidth(20, 4);                           // Custom ID
+            $opt->setColumnWidthForRange(22, 5, count($headers));  // the rest
+
             $writer->openToFile($abs);
-            $writer->addRow(Row::fromValues($headers));
+
+            // Bold header (works on both mutable and immutable Style)
+            // Bold header: style is attached per cell
+            $style = new Style();
+            if (method_exists($style, 'setFontBold')) {
+                $style->setFontBold();
+            } else {
+                $style = $style->withFontBold(true);
+            }
+
+            $headerCells = array_map(fn($h) => Cell::fromValue($h, $style), $headers);
+            $writer->addRow(new Row($headerCells));
 
             $parts[]    = [$abs, $name];
             $rowsInPart = 0;

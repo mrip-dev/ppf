@@ -46,7 +46,7 @@ class ExportRequestController extends Controller
             'status'           => 'pending',
         ]);
 
-        ExportCnRecordsJob::dispatch($export->id);
+        ExportCnRecordsJob::dispatchAfterResponse($export->id);
 
         return response()->json(['message' => "Export #{$export->id} queued."]);
     }
@@ -124,7 +124,7 @@ class ExportRequestController extends Controller
             'completed_at'     => null,
         ]);
 
-        ExportCnRecordsJob::dispatch($export->id);
+        ExportCnRecordsJob::dispatchAfterResponse($export->id);
 
         return response()->json(['message' => 'Retry queued.']);
     }

@@ -92,6 +92,7 @@ Route::middleware([
     Route::get('/fetch-data2', [App\Http\Controllers\ControllerManagementController2::class, 'fetchData'])->name('fetch.data2');
     Route::Resource('/cm-shed1', App\Http\Controllers\ControllerManagementController::class);
     Route::Resource('/cm-shed2', App\Http\Controllers\ControllerManagementController2::class);
+    Route::post('/cr1/clear-displayed', [App\Http\Controllers\ControllerManagementController::class, 'clearDisplayedRecords'])->name('cr1.clear-displayed');
     Route::post('/cr1/del/{id}', [App\Http\Controllers\ControllerManagementController::class, 'delRecord'])->name('cr1.delete');
     Route::post('/cr2/del/{id}', [App\Http\Controllers\ControllerManagementController2::class, 'delRecord'])->name('cr2.delete');
 
@@ -106,4 +107,9 @@ Route::middleware([
         Route::post('/{id}/retry',       [ExportRequestController::class, 'retry']);
         Route::delete('/{id}',           [ExportRequestController::class, 'destroy']);
     });
+
+    Route::post('/records/{shed}/old/preview', [ControllerManagementController::class, 'previewOldRecords'])
+        ->whereIn('shed', ['shed1', 'shed2'])->name('records.old.preview');
+    Route::post('/records/{shed}/old/purge', [ControllerManagementController::class, 'purgeOldRecords'])
+        ->whereIn('shed', ['shed1', 'shed2'])->name('records.old.purge');
 });
