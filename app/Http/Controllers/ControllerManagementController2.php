@@ -77,16 +77,11 @@ class ControllerManagementController2 extends Controller
 
     public function chunkWiseData(Request $request)
     {
-        $farm = $this->globalSetting();
+        $farm      = $this->globalSetting();
         $device_id = $farm->device_id_shed2;
 
-        $columns = \Schema::getColumnListing('esp32_table_dht11_leds_record');
-
-        // Latest id in each 10-minute bucket (no LIMIT, so a plain subquery works in MariaDB)
-        $latestIds = CNRecord::query()
-            ->where('board', $device_id)
-            ->selectRaw('MAX(id) as id')
-            ->groupByRaw('UNIX_TIMESTAMP(TIMESTAMP(`date`, `time`)) DIV 600');
+        $columns   = \Schema::getColumnListing('esp32_table_dht11_leds_record');
+        $latestIds = $this->latestRecordIds($device_id);
 
         $records = CNRecord::query()
             ->select($columns)
@@ -99,6 +94,25 @@ class ControllerManagementController2 extends Controller
             ->get();
 
         return view('modules.cr2.index', ['records' => $records]);
+    }
+
+    /** Newest record of each 10-minute bucket (last 3 days, max 500 buckets). */
+    private function latestRecordIds($deviceId)
+    {
+        $table = (new CNRecord)->getTable();
+
+        $maxTs = CNRecord::query()
+            ->where('board', $deviceId)
+            ->where('date', '>=', now()->subDays(3)->toDateString())
+            ->selectRaw('MAX(TIMESTAMP(`date`, `time`)) AS ts')
+            ->groupByRaw('UNIX_TIMESTAMP(TIMESTAMP(`date`, `time`)) DIV 600')
+            ->orderByDesc('ts')
+            ->limit(500);
+
+        return CNRecord::query()
+            ->where('board', $deviceId)
+            ->joinSub($maxTs, 'm', fn($j) => $j->whereRaw("TIMESTAMP({$table}.`date`, {$table}.`time`) = m.ts"))
+            ->select("{$table}.id");
     }
 
     /**

@@ -127,13 +127,20 @@ class ControllerManagementController extends Controller
 
     private function latestCr1RecordIds($deviceId)
     {
-        return CNRecord::query()
+        $maxTs = CNRecord::query()
             ->where('board', $deviceId)
             ->where('date', '>=', now()->subDays(3)->toDateString())
-            ->selectRaw('MAX(id) as id')
+            ->selectRaw('MAX(TIMESTAMP(`date`, `time`)) AS ts')
             ->groupByRaw('UNIX_TIMESTAMP(TIMESTAMP(`date`, `time`)) DIV 600')
-            ->orderByDesc('id')
+            ->orderByDesc('ts')
             ->limit(500);
+
+        $table = (new CNRecord)->getTable();
+
+        return CNRecord::query()
+            ->where('board', $deviceId)
+            ->joinSub($maxTs, 'm', fn($j) => $j->whereRaw("TIMESTAMP({$table}.`date`, {$table}.`time`) = m.ts"))
+            ->select("{$table}.id");
     }
 
     public function index()
